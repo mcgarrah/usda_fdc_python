@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 """
-Version Update Script for 1WorldSync Python Client
+Version Update Script for USDA FDC Python Client
 
 This script updates the version number in all necessary files:
-- oneworldsync/__init__.py
+- usda_fdc/__init__.py
 - pyproject.toml
 - setup.py
 
 Usage:
-    python version_update.py 0.1.4
+    python version_update.py 0.1.5
 """
 
 import re
@@ -25,33 +25,113 @@ def update_version(new_version):
 
     # Update __init__.py
     init_path = os.path.join('usda_fdc', '__init__.py')
-    update_file(init_path, r"__version__ = '[^']+'", f"__version__ = '{new_version}'")
+    success = update_init_version(init_path, new_version)
+    if not success:
+        return False
 
-    # Update pyproject.toml
-    update_file('pyproject.toml', r'version = "[^"]+"', f'version = "{new_version}"')
+    # Update pyproject.toml - only update the project version, not python_version
+    success = update_pyproject_version('pyproject.toml', new_version)
+    if not success:
+        return False
 
     # Update setup.py
-    update_file('setup.py', r'version="[^"]+"', f'version="{new_version}"')
+    success = update_setup_version('setup.py', new_version)
+    if not success:
+        return False
 
     print(f"Version updated to {new_version} in all files.")
     return True
 
 
-def update_file(file_path, pattern, replacement):
-    """Update version in a specific file"""
+def update_init_version(file_path, new_version):
+    """Update version in __init__.py file"""
     if not os.path.exists(file_path):
-        print(f"Warning: File {file_path} not found.")
+        print(f"Error: File {file_path} not found.")
         return False
 
     with open(file_path, 'r', encoding="utf-8") as file:
         content = file.read()
 
-    updated_content = re.sub(pattern, replacement, content)
+    # Handle both single and double quotes
+    pattern = r'__version__\s*=\s*["\']([^"\']+)["\']'
+    match = re.search(pattern, content)
+    
+    if not match:
+        print(f"Error: Could not find __version__ in {file_path}")
+        return False
+    
+    old_version = match.group(1)
+    # Preserve the original quote style (single or double)
+    quote_char = content[match.start() + content[match.start():].find('=') + 1:].strip()[0]
+    
+    # Replace the version while preserving the quote style
+    updated_content = re.sub(
+        pattern, 
+        f'__version__ = {quote_char}{new_version}{quote_char}', 
+        content
+    )
 
     with open(file_path, 'w', encoding="utf-8") as file:
         file.write(updated_content)
 
-    print(f"Updated {file_path}")
+    print(f"Updated {file_path}: {old_version} -> {new_version}")
+    return True
+
+
+def update_pyproject_version(file_path, new_version):
+    """Update only the project version in pyproject.toml"""
+    if not os.path.exists(file_path):
+        print(f"Error: File {file_path} not found.")
+        return False
+
+    with open(file_path, 'r', encoding="utf-8") as file:
+        content = file.read()
+
+    # Find the project section and update the version
+    project_section_match = re.search(r'(\[project\][^\[]*?)version\s*=\s*"([^"]+)"', content, re.DOTALL)
+    
+    if project_section_match:
+        before_version = project_section_match.group(1)
+        old_version = project_section_match.group(2)
+        updated_content = content.replace(
+            f'{before_version}version = "{old_version}"', 
+            f'{before_version}version = "{new_version}"'
+        )
+        
+        with open(file_path, 'w', encoding="utf-8") as file:
+            file.write(updated_content)
+        
+        print(f"Updated {file_path}: {old_version} -> {new_version}")
+        return True
+    else:
+        print(f"Error: Could not find version in [project] section of {file_path}")
+        return False
+
+
+def update_setup_version(file_path, new_version):
+    """Update version in setup.py file"""
+    if not os.path.exists(file_path):
+        print(f"Error: File {file_path} not found.")
+        return False
+
+    with open(file_path, 'r', encoding="utf-8") as file:
+        content = file.read()
+
+    # Match version="X.Y.Z" pattern
+    pattern = r'version\s*=\s*"([^"]+)"'
+    match = re.search(pattern, content)
+    
+    if not match:
+        print(f"Error: Could not find version in {file_path}")
+        return False
+    
+    old_version = match.group(1)
+    updated_content = re.sub(pattern, f'version="{new_version}"', content)
+
+    with open(file_path, 'w', encoding="utf-8") as file:
+        file.write(updated_content)
+
+    print(f"Updated {file_path}: {old_version} -> {new_version}")
     return True
 
 

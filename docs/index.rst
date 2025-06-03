@@ -61,6 +61,7 @@ Contents
    user/django_integration
    user/cli
    user/nutrient_analysis
+   user/examples
    user/advanced_usage
    user/error_handling
 
