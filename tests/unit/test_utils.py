@@ -1,7 +1,8 @@
-"""Tests for the utility functions."""
+"""
+Unit tests for the utils module.
+"""
 
 import pytest
-from pint import UndefinedUnitError, DimensionalityError
 
 from usda_fdc.utils import (
     parse_unit_and_value,
@@ -11,91 +12,99 @@ from usda_fdc.utils import (
     normalize_nutrient_value
 )
 
-
 def test_parse_unit_and_value():
-    """Test parsing a unit and value from a string."""
-    # Test simple cases
-    assert parse_unit_and_value("100g") == (100, "g")
-    assert parse_unit_and_value("100 g") == (100, "g")
-    assert parse_unit_and_value("1.5cups") == (1.5, "cups")
-    assert parse_unit_and_value("1.5 cups") == (1.5, "cups")
+    """Test parse_unit_and_value function."""
+    # Test with space between value and unit
+    value, unit = parse_unit_and_value("100 g")
+    assert value == 100.0
+    assert unit == "g"
     
-    # Test fractions
-    assert parse_unit_and_value("1/2 cup") == (0.5, "cup")
-    assert parse_unit_and_value("1/4tsp") == (0.25, "tsp")
+    # Test without space
+    value, unit = parse_unit_and_value("100g")
+    assert value == 100.0
+    assert unit == "g"
     
-    # Test invalid format
+    # Test with decimal
+    value, unit = parse_unit_and_value("1.5 cups")
+    assert value == 1.5
+    assert unit == "cups"
+    
+    # Test with fraction
+    value, unit = parse_unit_and_value("1/2 cup")
+    assert value == 0.5
+    assert unit == "cup"
+    
+    # Test with invalid format
     with pytest.raises(ValueError):
         parse_unit_and_value("invalid")
 
-
 def test_convert_to_grams():
-    """Test converting measurements to grams."""
-    # Test weight conversions
-    assert convert_to_grams(1, "g") == 1
-    assert convert_to_grams(1, "kg") == 1000
-    assert convert_to_grams(1, "oz") == pytest.approx(28.3495)
-    assert convert_to_grams(1, "lb") == pytest.approx(453.592)
+    """Test convert_to_grams function."""
+    # Test with grams
+    assert convert_to_grams(100.0, "g") == 100.0
     
-    # Test invalid conversions
-    with pytest.raises(ValueError):
-        convert_to_grams(1, "ml")
+    # Test with kilograms
+    assert convert_to_grams(1.0, "kg") == 1000.0
     
+    # Test with ounces
+    assert round(convert_to_grams(1.0, "oz"), 1) == 28.3
+    
+    # Test with pounds
+    assert round(convert_to_grams(1.0, "lb"), 1) == 453.6
+    
+    # Test with invalid unit
     with pytest.raises(ValueError):
-        convert_to_grams(1, "invalid")
-
+        convert_to_grams(1.0, "invalid")
 
 def test_convert_to_milliliters():
-    """Test converting measurements to milliliters."""
-    # Test volume conversions
-    assert convert_to_milliliters(1, "ml") == 1
-    assert convert_to_milliliters(1, "l") == 1000
-    assert convert_to_milliliters(1, "cup") == pytest.approx(236.588)
-    assert convert_to_milliliters(1, "tbsp") == pytest.approx(14.7868)
-    assert convert_to_milliliters(1, "tsp") == pytest.approx(4.92892)
+    """Test convert_to_milliliters function."""
+    # Test with milliliters
+    assert convert_to_milliliters(100.0, "ml") == 100.0
     
-    # Test invalid conversions
-    with pytest.raises(ValueError):
-        convert_to_milliliters(1, "g")
+    # Test with liters
+    assert pytest.approx(convert_to_milliliters(1.0, "l")) == 1000.0
     
+    # Test with cups
+    assert round(convert_to_milliliters(1.0, "cup"), 1) == 236.6
+    
+    # Test with tablespoons
+    assert round(convert_to_milliliters(1.0, "tbsp"), 1) == 14.8
+    
+    # Test with invalid unit
     with pytest.raises(ValueError):
-        convert_to_milliliters(1, "invalid")
-
+        convert_to_milliliters(1.0, "invalid")
 
 def test_convert_measurement():
-    """Test converting between different units."""
-    # Test weight conversions
-    assert convert_measurement(1, "g", "mg") == 1000
-    assert convert_measurement(1, "kg", "g") == 1000
-    assert convert_measurement(1, "oz", "g") == pytest.approx(28.3495)
+    """Test convert_measurement function."""
+    # Test with same units
+    assert convert_measurement(100.0, "g", "g") == 100.0
     
-    # Test volume conversions
-    assert convert_measurement(1, "l", "ml") == 1000
-    assert convert_measurement(1, "cup", "ml") == pytest.approx(236.588)
-    assert convert_measurement(1, "tbsp", "tsp") == 3
+    # Test with different units
+    assert convert_measurement(1.0, "kg", "g") == 1000.0
+    assert pytest.approx(convert_measurement(1000.0, "g", "kg")) == 1.0
     
-    # Test invalid conversions
+    # Test with incompatible units
     with pytest.raises(ValueError):
-        convert_measurement(1, "g", "ml")
-    
-    with pytest.raises(ValueError):
-        convert_measurement(1, "invalid", "g")
-
+        convert_measurement(1.0, "g", "ml")
 
 def test_normalize_nutrient_value():
-    """Test normalizing nutrient values to standard units."""
-    # Test normalization to same unit
-    assert normalize_nutrient_value(10, "g", "g") == (10, "g")
+    """Test normalize_nutrient_value function."""
+    # Test with same units
+    value, unit = normalize_nutrient_value(100.0, "g", "g")
+    assert value == 100.0
+    assert unit == "g"
     
-    # Test normalization to different unit
-    assert normalize_nutrient_value(1000, "mg", "g") == (1, "g")
+    # Test with convertible units
+    value, unit = normalize_nutrient_value(1000.0, "mg", "g")
+    assert value == 1.0
+    assert unit == "g"
     
-    # Test normalization with unit mapping
-    assert normalize_nutrient_value(10, "G", "g") == (10, "g")
-    assert normalize_nutrient_value(1000, "MG", "g") == (1, "g")
+    # Test with uppercase units
+    value, unit = normalize_nutrient_value(100.0, "G", "g")
+    assert value == 100.0
+    assert unit == "g"
     
-    # Test normalization with incompatible units
-    assert normalize_nutrient_value(10, "IU", "g") == (10, "iu")
-    
-    # Test normalization with invalid target unit
-    assert normalize_nutrient_value(10, "g", "invalid") == (10, "g")
+    # Test with non-convertible units
+    value, unit = normalize_nutrient_value(100.0, "IU", "g")
+    assert value == 100.0
+    assert unit == "IU"

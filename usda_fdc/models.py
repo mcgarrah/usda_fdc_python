@@ -19,6 +19,10 @@ class Nutrient:
     nutrient_nbr: Optional[int] = None
     rank: Optional[int] = None
     
+    def __str__(self) -> str:
+        """String representation of the nutrient."""
+        return f"{self.name}: {self.amount} {self.unit_name}"
+    
     @classmethod
     def from_api_data(cls, data: Dict[str, Any]) -> 'Nutrient':
         """
@@ -52,6 +56,10 @@ class FoodPortion:
     portion_description: Optional[str] = None
     modifier: Optional[str] = None
     measure_unit: Optional[str] = None
+    
+    def __str__(self) -> str:
+        """String representation of the food portion."""
+        return f"{self.amount} {self.measure_unit} ({self.gram_weight}g)"
     
     @classmethod
     def from_api_data(cls, data: Dict[str, Any]) -> 'FoodPortion':

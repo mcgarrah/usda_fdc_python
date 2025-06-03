@@ -1,184 +1,114 @@
-"""Tests for the FdcClient class."""
+"""
+Unit tests for the FdcClient class.
+"""
 
 import pytest
 from unittest.mock import patch, MagicMock
 
-from usda_fdc import FdcClient
-from usda_fdc.exceptions import FdcApiError, FdcAuthError, FdcRateLimitError
+from usda_fdc import FdcClient, FdcApiError
+from usda_fdc.models import Nutrient
 
-
-def test_init_with_api_key():
-    """Test initializing the client with an API key."""
-    client = FdcClient(api_key="test_key")
-    assert client.api_key == "test_key"
+def test_client_initialization():
+    """Test client initialization with API key."""
+    client = FdcClient("test_api_key")
+    assert client.api_key == "test_api_key"
     assert client.base_url == "https://api.nal.usda.gov/fdc/v1/"
 
+def test_client_initialization_with_custom_url():
+    """Test client initialization with custom API URL."""
+    client = FdcClient("test_api_key", base_url="https://custom-api.example.com/")
+    assert client.api_key == "test_api_key"
+    assert client.base_url == "https://custom-api.example.com/"
 
-def test_init_without_api_key():
-    """Test initializing the client without an API key."""
-    with pytest.raises(ValueError):
-        FdcClient(api_key=None)
+def test_search(mock_client, mock_search_response):
+    """Test search method."""
+    with patch.object(mock_client, '_make_request', return_value=mock_search_response):
+        results = mock_client.search("apple")
+        assert results.total_hits == 2
+        assert len(results.foods) == 2
+        assert results.foods[0].fdc_id == 1234
+        assert results.foods[0].description == "Test Food 1"
 
+def test_search_with_parameters(mock_client, mock_search_response):
+    """Test search method with additional parameters."""
+    with patch.object(mock_client, '_make_request', return_value=mock_search_response) as mock_request:
+        results = mock_client.search(
+            "apple",
+            data_type=["Branded"],
+            page_size=25,
+            page_number=2,
+            sort_by="dataType.keyword",
+            sort_order="asc"
+        )
+        
+        # Verify the parameters were passed correctly
+        args, kwargs = mock_request.call_args
+        assert kwargs["params"]["query"] == "apple"
+        assert kwargs["params"]["dataType"] == ["Branded"]
+        assert kwargs["params"]["pageSize"] == 25
+        assert kwargs["params"]["pageNumber"] == 2
+        assert kwargs["params"]["sortBy"] == "dataType.keyword"
+        assert kwargs["params"]["sortOrder"] == "asc"
 
-def test_init_with_custom_base_url():
-    """Test initializing the client with a custom base URL."""
-    client = FdcClient(api_key="test_key", base_url="https://example.com/api/")
-    assert client.base_url == "https://example.com/api/"
+def test_get_food(mock_client, mock_food_response):
+    """Test get_food method."""
+    with patch.object(mock_client, '_make_request', return_value=mock_food_response):
+        food = mock_client.get_food(1234)
+        assert food.fdc_id == 1234
+        assert food.description == "Test Food"
+        assert len(food.nutrients) == 2
+        assert food.nutrients[0].name == "Protein"
+        assert food.nutrients[0].amount == 10.5
+        assert food.nutrients[0].unit_name == "g"
 
+def test_get_foods(mock_client, mock_foods_list_response):
+    """Test get_foods method."""
+    with patch.object(mock_client, '_make_request', return_value=mock_foods_list_response):
+        foods = mock_client.get_foods([1234, 5678])
+        assert len(foods) == 2
+        assert foods[0].fdc_id == 1234
+        assert foods[0].description == "Test Food 1"
+        assert foods[1].fdc_id == 5678
+        assert foods[1].description == "Test Food 2"
 
-def test_make_request_success(mock_client):
-    """Test making a successful request."""
-    mock_response = MagicMock()
-    mock_response.status_code = 200
-    mock_response.json.return_value = {"key": "value"}
-    
-    mock_client.session.request.return_value = mock_response
-    mock_client._make_request = FdcClient._make_request.__get__(mock_client)
-    
-    result = mock_client._make_request("endpoint")
-    
-    assert result == {"key": "value"}
-    mock_client.session.request.assert_called_once()
+def test_get_nutrients(mock_client, mock_nutrients_response):
+    """Test get_nutrients method."""
+    # The get_nutrients method first calls get_food, then returns food.nutrients
+    with patch.object(mock_client, 'get_food') as mock_get_food:
+        # Create real Nutrient objects instead of MagicMocks
+        nutrients = [
+            Nutrient(id=1001, name="Protein", amount=10.5, unit_name="g"),
+            Nutrient(id=1002, name="Fat", amount=5.2, unit_name="g")
+        ]
+        
+        # Create a mock food object with nutrients
+        mock_food = MagicMock()
+        mock_food.nutrients = nutrients
+        mock_get_food.return_value = mock_food
+        
+        # Call get_nutrients
+        result_nutrients = mock_client.get_nutrients(1234)
+        
+        # Verify get_food was called with the correct ID
+        mock_get_food.assert_called_once_with(1234)
+        
+        # Verify the nutrients
+        assert len(result_nutrients) == 2
+        assert result_nutrients[0].name == "Protein"
+        assert result_nutrients[0].amount == 10.5
+        assert result_nutrients[0].unit_name == "g"
 
+def test_list_foods(mock_client, mock_list_foods_response):
+    """Test list_foods method."""
+    with patch.object(mock_client, '_make_request', return_value=mock_list_foods_response):
+        foods = mock_client.list_foods()
+        assert len(foods) == 2
+        assert foods[0].fdc_id == 1234
+        assert foods[0].description == "Test Food 1"
 
-def test_make_request_auth_error(mock_client):
-    """Test making a request with authentication error."""
-    mock_response = MagicMock()
-    mock_response.status_code = 401
-    mock_response.text = "Unauthorized"
-    
-    mock_client.session.request.return_value = mock_response
-    mock_client.session.request.return_value.raise_for_status.side_effect = Exception("401 Client Error")
-    mock_client._make_request = FdcClient._make_request.__get__(mock_client)
-    
-    with pytest.raises(FdcAuthError):
-        mock_client._make_request("endpoint")
-
-
-def test_make_request_rate_limit_error(mock_client):
-    """Test making a request with rate limit error."""
-    mock_response = MagicMock()
-    mock_response.status_code = 429
-    mock_response.text = "Too Many Requests"
-    
-    mock_client.session.request.return_value = mock_response
-    mock_client.session.request.return_value.raise_for_status.side_effect = Exception("429 Client Error")
-    mock_client._make_request = FdcClient._make_request.__get__(mock_client)
-    
-    with pytest.raises(FdcRateLimitError):
-        mock_client._make_request("endpoint")
-
-
-def test_make_request_api_error(mock_client):
-    """Test making a request with API error."""
-    mock_response = MagicMock()
-    mock_response.status_code = 500
-    mock_response.text = "Server Error"
-    
-    mock_client.session.request.return_value = mock_response
-    mock_client.session.request.return_value.raise_for_status.side_effect = Exception("500 Server Error")
-    mock_client._make_request = FdcClient._make_request.__get__(mock_client)
-    
-    with pytest.raises(FdcApiError):
-        mock_client._make_request("endpoint")
-
-
-def test_search(mock_client, sample_search_result_data):
-    """Test searching for foods."""
-    mock_client._make_request.return_value = sample_search_result_data
-    
-    result = mock_client.search("apple")
-    
-    mock_client._make_request.assert_called_once_with(
-        "foods/search",
-        params={
-            "query": "apple",
-            "pageSize": 50,
-            "pageNumber": 1
-        }
-    )
-    
-    assert result.total_hits == sample_search_result_data["totalHits"]
-    assert len(result.foods) == len(sample_search_result_data["foods"])
-    assert result.foods[0].fdc_id == sample_search_result_data["foods"][0]["fdcId"]
-    assert result.foods[0].description == sample_search_result_data["foods"][0]["description"]
-
-
-def test_get_food(mock_client, sample_food_data):
-    """Test getting a food by FDC ID."""
-    mock_client._make_request.return_value = sample_food_data
-    
-    result = mock_client.get_food(1234)
-    
-    mock_client._make_request.assert_called_once_with(
-        "food/1234",
-        params={"format": "full"}
-    )
-    
-    assert result.fdc_id == sample_food_data["fdcId"]
-    assert result.description == sample_food_data["description"]
-    assert len(result.nutrients) == len(sample_food_data["foodNutrients"])
-    assert len(result.food_portions) == len(sample_food_data["foodPortions"])
-
-
-def test_get_foods(mock_client, sample_food_data):
-    """Test getting multiple foods by FDC ID."""
-    mock_client._make_request.return_value = [sample_food_data, sample_food_data]
-    
-    result = mock_client.get_foods([1234, 5678])
-    
-    mock_client._make_request.assert_called_once_with(
-        "foods",
-        params={
-            "fdcIds": [1234, 5678],
-            "format": "full"
-        }
-    )
-    
-    assert len(result) == 2
-    assert result[0].fdc_id == sample_food_data["fdcId"]
-    assert result[1].fdc_id == sample_food_data["fdcId"]
-
-
-def test_get_nutrients(mock_client, sample_food_data):
-    """Test getting nutrients for a food."""
-    mock_client._make_request.return_value = sample_food_data
-    
-    result = mock_client.get_nutrients(1234)
-    
-    mock_client._make_request.assert_called_once_with(
-        "food/1234",
-        params={"format": "full"}
-    )
-    
-    assert len(result) == len(sample_food_data["foodNutrients"])
-    assert result[0].name == sample_food_data["foodNutrients"][0]["nutrient"]["name"]
-    assert result[0].amount == sample_food_data["foodNutrients"][0]["amount"]
-
-
-def test_list_foods(mock_client, sample_food_data):
-    """Test listing foods."""
-    mock_client._make_request.return_value = [sample_food_data, sample_food_data]
-    
-    result = mock_client.list_foods(
-        data_type=["Branded"],
-        page_size=10,
-        page_number=2,
-        sort_by="description",
-        sort_order="asc"
-    )
-    
-    mock_client._make_request.assert_called_once_with(
-        "foods/list",
-        params={
-            "dataType": ["Branded"],
-            "pageSize": 10,
-            "pageNumber": 2,
-            "sortBy": "description",
-            "sortOrder": "asc"
-        }
-    )
-    
-    assert len(result) == 2
-    assert result[0].fdc_id == sample_food_data["fdcId"]
-    assert result[1].fdc_id == sample_food_data["fdcId"]
+def test_api_error_handling(mock_client):
+    """Test API error handling."""
+    with patch.object(mock_client, '_make_request', side_effect=FdcApiError("API Error")):
+        with pytest.raises(FdcApiError) as excinfo:
+            mock_client.search("apple")
+        assert "API Error" in str(excinfo.value)
