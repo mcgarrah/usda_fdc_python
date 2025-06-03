@@ -1,50 +1,24 @@
 {
-    "cSpell.words": [
-        "GTIN",
-        "ONEWORLDSYNC"
-    ],
     "python.linting.enabled": true,
     "python.linting.flake8Enabled": true,
     "python.linting.mypyEnabled": true,
     "python.formatting.provider": "black",
     "python.formatting.blackArgs": [
-        "--line-length",
-        "100"
+        "--line-length=100"
     ],
     "editor.formatOnSave": true,
     "editor.codeActionsOnSave": {
-        "source.organizeImports": "explicit"
+        "source.organizeImports": true
     },
     "python.testing.pytestEnabled": true,
     "python.testing.unittestEnabled": false,
     "python.testing.nosetestsEnabled": false,
     "python.testing.pytestArgs": [
-        "tests"
+        "tests",
+        "-v"
     ],
-    "python.linting.ignorePatterns": [
-        ".vscode/*.py",
-        "**/site-packages/**/*.py",
-        "docs/conf.py"
-    ],
+    "python.envFile": "${workspaceFolder}/.env",
     "python.analysis.extraPaths": [
         "${workspaceFolder}"
-    ],
-    "[python]": {
-        "editor.rulers": [
-            100
-        ]
-    },
-    "files.exclude": {
-        "**/__pycache__": true,
-        "**/.pytest_cache": true,
-        "**/*.egg-info": true,
-        "**/.coverage": true,
-        "**/htmlcov": true,
-        "**/.mypy_cache": true,
-        "**/.tox": true,
-        "**/.eggs": true,
-        "**/build": true,
-        "**/dist": true
-    },
-    "autoDocstring.docstringFormat": "google"
+    ]
 }

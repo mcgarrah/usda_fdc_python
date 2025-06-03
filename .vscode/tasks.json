@@ -2,9 +2,9 @@
     "version": "2.0.0",
     "tasks": [
         {
-            "label": "Run Tests",
+            "label": "Run All Tests",
             "type": "shell",
-            "command": "python -m pytest",
+            "command": "python -m pytest tests -v",
             "group": {
                 "kind": "test",
                 "isDefault": true
@@ -12,83 +12,86 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
+            }
+        },
+        {
+            "label": "Run Unit Tests",
+            "type": "shell",
+            "command": "python -m pytest tests/unit -v",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Integration Tests",
+            "type": "shell",
+            "command": "python -m pytest tests/integration -v",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
+        },
+        {
+            "label": "Run Django Tests",
+            "type": "shell",
+            "command": "python -m pytest tests/django -v",
+            "group": "test",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
+            }
         },
         {
             "label": "Run Tests with Coverage",
             "type": "shell",
-            "command": "python -m pytest --cov=usda_fdc --cov-report=term --cov-report=html",
+            "command": "python -m pytest --cov=usda_fdc --cov-report=html",
             "group": "test",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Lint with Flake8",
-            "type": "shell",
-            "command": "python -m flake8 usda_fdc tests",
-            "group": "test",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": {
-                "owner": "python",
-                "fileLocation": ["relative", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.+):(\\d+):(\\d+): (\\w\\d+) (.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "column": 3,
-                    "code": 4,
-                    "message": 5
-                }
             }
         },
         {
-            "label": "Format with Black",
+            "label": "Format Code",
             "type": "shell",
             "command": "python -m black usda_fdc tests",
             "group": "build",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
+            }
         },
         {
-            "label": "Sort imports with isort",
+            "label": "Sort Imports",
             "type": "shell",
             "command": "python -m isort usda_fdc tests",
             "group": "build",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
+            }
         },
         {
-            "label": "Type check with mypy",
+            "label": "Lint Code",
             "type": "shell",
-            "command": "python -m mypy usda_fdc",
-            "group": "test",
+            "command": "python -m flake8 usda_fdc tests",
+            "group": "build",
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": {
-                "owner": "python",
-                "fileLocation": ["relative", "${workspaceFolder}"],
-                "pattern": {
-                    "regexp": "^(.+):(\\d+): (\\w+): (.*)$",
-                    "file": 1,
-                    "line": 2,
-                    "severity": 3,
-                    "message": 4
-                }
+            }
+        },
+        {
+            "label": "Type Check",
+            "type": "shell",
+            "command": "python -m mypy usda_fdc",
+            "group": "build",
+            "presentation": {
+                "reveal": "always",
+                "panel": "new"
             }
         },
         {
@@ -99,145 +102,7 @@
             "presentation": {
                 "reveal": "always",
                 "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Update Version",
-            "type": "shell",
-            "command": "python version_update.py ${input:version}",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Install Development Dependencies",
-            "type": "shell",
-            "command": "pip install -e \".[dev]\"",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Install Documentation Dependencies",
-            "type": "shell",
-            "command": "pip install -e \".[docs]\"",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "new"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 1. Update Version",
-            "type": "shell",
-            "command": "python version_update.py ${input:version}",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 2. Commit Version Changes",
-            "type": "shell",
-            "command": "git add . && git commit -m \"Bump version to v${input:version}\" && git push origin dev",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 3. Create Pull Request",
-            "type": "shell",
-            "command": "gh pr create --base main --head dev --title \"Release v${input:version}\" --body \"${input:releaseNotes}\"",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 4. Merge Pull Request",
-            "type": "shell",
-            "command": "gh pr merge ${input:prNumber} --merge",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 5. Create GitHub Release",
-            "type": "shell",
-            "command": "git checkout main && git pull origin main && git tag v${input:version} && git push origin v${input:version} && gh release create v${input:version} --title \"Release v${input:version}\" --notes \"${input:releaseNotes}\"",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: 6. Build and Upload to PyPI",
-            "type": "shell",
-            "command": "python -m build && python -m twine upload dist/*",
-            "group": "none",
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        },
-        {
-            "label": "Release: Complete Process",
-            "dependsOrder": "sequence",
-            "dependsOn": [
-                "Release: 1. Update Version",
-                "Release: 2. Commit Version Changes",
-                "Release: 3. Create Pull Request"
-            ],
-            "group": {
-                "kind": "build",
-                "isDefault": true
-            },
-            "presentation": {
-                "reveal": "always",
-                "panel": "shared"
-            },
-            "problemMatcher": []
-        }
-    ],
-    "inputs": [
-        {
-            "id": "version",
-            "description": "Version number (e.g., 0.1.7)",
-            "default": "0.1.7",
-            "type": "promptString"
-        },
-        {
-            "id": "releaseNotes",
-            "description": "Release notes",
-            "default": "Release version X.Y.Z with the following changes:\n- Feature 1\n- Feature 2\n- Bug fix 1",
-            "type": "promptString"
-        },
-        {
-            "id": "prNumber",
-            "description": "Pull request number",
-            "default": "",
-            "type": "promptString"
+            }
         }
     ]
 }

@@ -13,23 +13,12 @@
             }
         },
         {
-            "name": "Python: Debug Tests",
-            "type": "python",
-            "request": "launch",
-            "program": "${file}",
-            "purpose": ["debug-test"],
-            "console": "integratedTerminal",
-            "justMyCode": false,
-            "env": {
-                "PYTHONPATH": "${workspaceFolder}"
-            }
-        },
-        {
             "name": "Python: All Tests",
             "type": "python",
             "request": "launch",
             "module": "pytest",
             "args": [
+                "tests",
                 "-v"
             ],
             "console": "integratedTerminal",
@@ -39,14 +28,57 @@
             }
         },
         {
-            "name": "Python: Tests with Coverage",
+            "name": "Python: Unit Tests",
             "type": "python",
             "request": "launch",
             "module": "pytest",
             "args": [
-                "--cov=usda_fdc",
-                "--cov-report=term",
-                "--cov-report=html"
+                "tests/unit",
+                "-v"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: Integration Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/integration",
+                "-v"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: Django Tests",
+            "type": "python",
+            "request": "launch",
+            "module": "pytest",
+            "args": [
+                "tests/django",
+                "-v"
+            ],
+            "console": "integratedTerminal",
+            "justMyCode": false,
+            "env": {
+                "PYTHONPATH": "${workspaceFolder}"
+            }
+        },
+        {
+            "name": "Python: CLI",
+            "type": "python",
+            "request": "launch",
+            "module": "usda_fdc.cli",
+            "args": [
+                "--help"
             ],
             "console": "integratedTerminal",
             "justMyCode": false,

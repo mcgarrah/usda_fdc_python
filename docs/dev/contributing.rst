@@ -12,7 +12,7 @@ Setting Up Development Environment
 
    .. code-block:: bash
 
-      git clone https://github.com/mcgarrah/usda_fdc_python.git
+      git clone https://github.com/yourusername/usda_fdc.git
       cd usda_fdc
 
 3. Install development dependencies:
@@ -72,7 +72,29 @@ Please write tests for new features and bug fixes. This project uses pytest:
    # Run tests with coverage
    pytest --cov=usda_fdc
 
-See :doc:`testing` for more details.
+For more details on testing, see :doc:`testing`.
+
+Running Specific Test Categories
+-----------------------------
+
+The test suite is organized into three categories:
+
+.. code-block:: bash
+
+   # Run unit tests only (default)
+   pytest tests/unit
+   
+   # Run integration tests (requires API key)
+   pytest -m integration
+   
+   # Run Django tests (requires Django)
+   pytest -m django
+
+For integration tests, you'll need to set your API key:
+
+.. code-block:: bash
+
+   export FDC_API_KEY=your_api_key_here
 
 Documentation
 ------------
@@ -100,17 +122,23 @@ Pull Request Process
 
 2. Make your changes and commit them with clear, descriptive commit messages.
 
-3. Push your branch to your fork:
+3. Ensure all tests pass:
+
+   .. code-block:: bash
+
+      pytest
+
+4. Push your branch to your fork:
 
    .. code-block:: bash
 
       git push origin feature-or-bugfix-name
 
-4. Submit a pull request to the main repository.
+5. Submit a pull request to the main repository.
 
-5. Ensure the CI checks pass.
+6. Ensure the CI checks pass.
 
-6. Address any feedback from maintainers.
+7. Address any feedback from maintainers.
 
 Code of Conduct
 -------------

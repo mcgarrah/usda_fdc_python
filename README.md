@@ -99,6 +99,33 @@ food = cache.get_food(1750340)
 cache.refresh([1750340, 1750341])
 ```
 
+## Testing
+
+The library includes a comprehensive test suite:
+
+```bash
+# Install test dependencies
+pip install -e ".[dev]"
+
+# Run all unit tests
+pytest
+
+# Run integration tests (requires API key)
+pytest -m integration
+
+# Run Django tests (requires Django)
+pytest -m django
+
+# Run tests with coverage
+pytest --cov=usda_fdc
+```
+
+For integration tests, set your API key as an environment variable:
+
+```bash
+export FDC_API_KEY=your_api_key_here
+```
+
 ## Documentation
 
 For detailed documentation, visit [docs.example.com/usda_fdc](https://docs.example.com/usda_fdc).
@@ -117,6 +144,13 @@ FDC_CACHE_TIMEOUT=86400
 ## Contributing
 
 Contributions are welcome! Please feel free to submit a Pull Request.
+
+1. Fork the repository
+2. Create your feature branch (`git checkout -b feature/amazing-feature`)
+3. Run the tests to ensure they pass (`pytest`)
+4. Commit your changes (`git commit -m 'Add some amazing feature'`)
+5. Push to the branch (`git push origin feature/amazing-feature`)
+6. Open a Pull Request
 
 ## License
 
