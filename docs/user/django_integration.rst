@@ -51,7 +51,7 @@ The ``FdcCache`` class provides a caching layer that stores API responses in bot
    cache = FdcCache()
    
    # Search for foods (results will be cached)
-   results = cache.search("apple")
+   results = cache.search("banana")
    
    # Get a food by FDC ID (will be cached in database)
    food = cache.get_food(1750340)
@@ -97,6 +97,35 @@ The library includes Django admin integration for managing food data:
    admin.site.register(FoodModel)
    admin.site.register(NutrientModel)
 
+The admin interface provides:
+
+- List views with filtering by data type, brand, and category
+- Detail views with nutrient information
+- Bulk actions for refreshing foods from the API
+- Custom filters for finding foods by nutrient content
+
+Management Commands
+----------------
+
+The library includes Django management commands for importing and refreshing data:
+
+.. code-block:: bash
+
+   # Import a specific food by FDC ID
+   python manage.py fdc_import --fdc-id 1750340
+   
+   # Import foods matching a search query
+   python manage.py fdc_import --search "apple" --limit 50
+   
+   # Import foods of specific data types
+   python manage.py fdc_import --data-type "Branded" "Foundation" --limit 100
+   
+   # Refresh stale foods (not updated in 30 days)
+   python manage.py fdc_refresh --stale --days 30 --limit 500
+   
+   # Warm the cache with new foods
+   python manage.py fdc_refresh --warm --data-type "Branded" --limit 1000
+
 Background Tasks
 -------------
 
@@ -104,14 +133,53 @@ For large datasets, you can use background tasks to cache data:
 
 .. code-block:: python
 
-   from usda_fdc.django import FdcCache
+   from usda_fdc.django.tasks import refresh_stale_foods, warm_cache
    
-   def cache_popular_foods():
-       cache = FdcCache()
-       popular_ids = [1750340, 1750341, 1750342]  # Example IDs
-       cache.get_foods(popular_ids)
+   # Refresh foods that haven't been updated in 30 days
+   refresh_stale_foods(days=30, limit=1000)
    
-   # Use with Celery, Django Q, or other task queues
+   # Warm the cache with new foods
+   warm_cache(data_type=["Branded"], limit=1000, batch_size=20)
+
+The tasks module is designed to work with Celery, Django Q, or other task queues:
+
+.. code-block:: python
+
+   # With Celery
+   from celery import shared_task
+   
+   @shared_task
+   def refresh_stale_foods_task():
+       from usda_fdc.django.tasks import refresh_stale_foods
+       refresh_stale_foods(days=30, limit=1000)
+   
+   # With Django Q
    from django_q.tasks import async_task
    
-   async_task(cache_popular_foods)
+   async_task(
+       'usda_fdc.django.tasks.refresh_stale_foods',
+       days=30,
+       limit=1000
+   )
+
+Views and URLs
+-----------
+
+The library includes Django views and URL patterns for displaying food data:
+
+.. code-block:: python
+
+   # urls.py
+   from django.urls import include, path
+   
+   urlpatterns = [
+       # ...
+       path('usda/', include('usda_fdc.django.urls')),
+       # ...
+   ]
+
+This provides the following URLs:
+
+- ``/usda/foods/`` - List view of foods with search and filtering
+- ``/usda/foods/<fdc_id>/`` - Detail view of a specific food
+- ``/usda/api/foods/<fdc_id>/`` - JSON API endpoint for a specific food

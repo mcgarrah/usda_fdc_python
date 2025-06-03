@@ -43,7 +43,7 @@ Or install from source:
 .. code-block:: bash
 
    git clone https://github.com/mcgarrah/usda_fdc_python.git
-   cd usda_fdc
+   cd usda_fdc_python
    pip install -e .
 
 Contents
