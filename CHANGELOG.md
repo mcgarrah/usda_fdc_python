@@ -4,9 +4,15 @@ All notable changes to the USDA FDC Python Client will be documented in this fil
 
 ## [0.1.6] - 2025-06-03
 
+### Added
+- Added comprehensive CHANGELOG.md file
+- Added more detailed examples documentation
+- Improved error handling in recipe analysis
+
 ### Fixed
 - Fixed version_update.py script to properly update all version references
-- Update documentation section of README.md to reference ReadTheDocs
+- Fixed Python version handling in pyproject.toml
+- Updated documentation links and references
 
 ## [0.1.5] - 2025-06-03
 
