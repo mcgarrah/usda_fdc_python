@@ -24,7 +24,7 @@ def update_version(new_version):
         return False
 
     # Update __init__.py
-    init_path = os.path.join('oneworldsync', '__init__.py')
+    init_path = os.path.join('usda_fdc', '__init__.py')
     update_file(init_path, r"__version__ = '[^']+'", f"__version__ = '{new_version}'")
 
     # Update pyproject.toml

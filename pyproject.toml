@@ -4,13 +4,11 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "usda_fdc"
-version = "0.1.0"
+version = "0.1.1"
 description = "A comprehensive Python library for interacting with the USDA Food Data Central API"
 readme = "README.md"
-authors = [
-    {name = "Your Name", email = "your.email@example.com"}
-]
-license = {text = "MIT"}
+authors = [{ name = "Michael McGarrah", email = "mcgarrah@gmail.com" }]
+license = { text = "MIT" }
 classifiers = [
     "Development Status :: 3 - Alpha",
     "Intended Audience :: Developers",
@@ -23,16 +21,10 @@ classifiers = [
     "Topic :: Software Development :: Libraries :: Python Modules",
 ]
 requires-python = ">=3.8"
-dependencies = [
-    "requests>=2.25.0",
-    "pint>=0.17",
-    "python-dotenv>=0.19.0",
-]
+dependencies = ["requests>=2.25.0", "pint>=0.17", "python-dotenv>=0.19.0"]
 
 [project.optional-dependencies]
-django = [
-    "Django>=3.2",
-]
+django = ["Django>=3.2"]
 dev = [
     "pytest>=6.0.0",
     "pytest-cov>=2.12.0",
@@ -41,15 +33,15 @@ dev = [
     "mypy>=0.812",
     "flake8>=3.9.2",
 ]
-docs = [
-    "sphinx>=4.0.2",
-    "sphinx-rtd-theme>=0.5.2",
-]
+docs = ["sphinx>=4.0.2", "sphinx-rtd-theme>=0.5.2"]
 
 [project.urls]
-Homepage = "https://github.com/yourusername/usda_fdc"
+Homepage = "https://github.com/mcgarrah/usda_fdc_python"
 Documentation = "https://usda-fdc.readthedocs.io"
-Issues = "https://github.com/yourusername/usda_fdc/issues"
+Issues = "https://github.com/mcgarrah/usda_fdc_python/issues"
+
+[project.scripts]
+fdc = "usda_fdc.cli:main"
 
 [tool.setuptools]
 packages = ["usda_fdc"]
@@ -63,7 +55,7 @@ profile = "black"
 line_length = 100
 
 [tool.mypy]
-python_version = "3.8"
+python_version = "0.1.1"
 warn_return_any = true
 warn_unused_configs = true
 disallow_untyped_defs = true

@@ -7,13 +7,14 @@ A comprehensive Python library for interacting with the USDA Food Data Central A
 
 ## Features
 
-- Complete API coverage for the USDA FoodData Central (FDC) database
+- Complete API coverage for the USDA Food Data Central (FDC) database
 - Object-oriented interface for working with food data
 - Comprehensive data models for all FDC data types
 - Efficient caching mechanisms for Django integration
 - Support for searching, filtering, and retrieving detailed nutritional information
 - Conversion utilities for different measurement units
 - Batch operations for efficient API usage
+- Command-line interface for quick data access
 - Detailed documentation and examples
 
 ## Installation
@@ -52,6 +53,30 @@ print(f"Data Type: {food.data_type}")
 nutrients = client.get_nutrients(1750340)
 for nutrient in nutrients:
     print(f"{nutrient.name}: {nutrient.amount} {nutrient.unit_name}")
+```
+
+## Command-Line Interface
+
+The library includes a command-line interface for quick access to FDC data:
+
+```bash
+# Set your API key (or use --api-key parameter)
+export FDC_API_KEY=your_api_key_here
+
+# Search for foods
+fdc search "apple"
+
+# Get detailed information for a specific food
+fdc food 1750340
+
+# Get nutrients for a food
+fdc nutrients 1750340
+
+# List foods with pagination
+fdc list --page-size 5 --page-number 1
+
+# Get help
+fdc --help
 ```
 
 ## Django Integration
