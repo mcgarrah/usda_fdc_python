@@ -1,0 +1,39 @@
+{
+  "metadata": {
+    "source": "Institute of Medicine. 2006. Dietary Reference Intakes: The Essential Guide to Nutrient Requirements.",
+    "url": "https://nap.nationalacademies.org/catalog/11537/dietary-reference-intakes-the-essential-guide-to-nutrient-requirements",
+    "description": "Male Recommended Dietary Allowance (RDA) or Adequate Intake (AI)",
+    "age_group": "19-50 years",
+    "gender": "male"
+  },
+  "dietary_reference_intakes": {
+    "vitamin_a": 900e-6,
+    "thiamin": 1.2e-3,
+    "riboflavin": 1.3e-3,
+    "niacin": 16e-3,
+    "pantothenic_acid": 5e-3,
+    "vitamin_b6": 1.3e-3,
+    "biotin": 30e-6,
+    "folate": 400e-6,
+    "vitamin_b12": 2.4e-6,
+    "choline": 550e-3,
+    "vitamin_c": 90e-3,
+    "vitamin_d": 15e-6,
+    "vitamin_e": 15e-3,
+    "vitamin_k": 120e-6,
+    "calcium": 1000e-3,
+    "copper": 900e-6,
+    "iron": 8e-3,
+    "magnesium": 420e-3,
+    "manganese": 2.3e-3,
+    "molybdenum": 45e-6,
+    "phosphorus": 700e-3,
+    "potassium": 3400e-3,
+    "sodium": 1500e-3,
+    "selenium": 55e-6,
+    "zinc": 11e-3,
+    "protein": 56,
+    "carbohydrate": 130,
+    "fiber": 38
+  }
+}

@@ -45,20 +45,20 @@ This document outlines the development plan for the `usda_fdc` Python library.
   - [x] Support for common food measurement conversions
   - [x] Add portion size calculations
 
-- [ ] **Nutrient Analysis**
-  - [ ] Create tools for analyzing nutrient content
-  - [ ] Implement RDA/DRI comparison functionality
-  - [ ] Add visualization helpers
+- [x] **Nutrient Analysis**
+  - [x] Create tools for analyzing nutrient content
+  - [x] Implement RDA/DRI comparison functionality
+  - [x] Add visualization helpers
 
 - [x] **Batch Processing**
   - [x] Implement efficient batch API operations
   - [ ] Add background processing for large datasets
   - [ ] Create export functionality (CSV, JSON, Excel)
 
-- [ ] **Recipe Analysis**
-  - [ ] Create recipe data model
-  - [ ] Implement ingredient parsing
-  - [ ] Add nutritional calculation for recipes
+- [x] **Recipe Analysis**
+  - [x] Create recipe data model
+  - [x] Implement ingredient parsing
+  - [x] Add nutritional calculation for recipes
 
 ## Phase 4: Documentation and Testing
 

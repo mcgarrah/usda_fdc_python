@@ -100,15 +100,102 @@ Filter foods by data type:
    # Get foundation and SR Legacy foods
    foundation_foods = client.list_foods(data_type=["Foundation", "SR Legacy"])
 
+Analyzing Nutrient Content
+-----------------------
+
+Analyze the nutrient content of a food:
+
+.. code-block:: python
+
+   from usda_fdc.analysis import analyze_food, DriType, Gender
+   
+   # Get a food
+   food = client.get_food(1750340)  # Apple, raw, with skin
+   
+   # Analyze the food
+   analysis = analyze_food(
+       food,
+       dri_type=DriType.RDA,
+       gender=Gender.MALE,
+       serving_size=100.0
+   )
+   
+   # Access the analysis results
+   print(f"Calories: {analysis.calories_per_serving} kcal")
+   print(f"Protein: {analysis.get_nutrient('protein').amount} g")
+   
+   # Check DRI percentages
+   vitamin_c = analysis.get_nutrient('vitamin_c')
+   if vitamin_c and vitamin_c.dri_percent:
+       print(f"Vitamin C: {vitamin_c.amount} mg ({vitamin_c.dri_percent:.1f}% of DRI)")
+
+Comparing Foods
+------------
+
+Compare the nutrient content of multiple foods:
+
+.. code-block:: python
+
+   from usda_fdc.analysis import compare_foods
+   
+   # Get foods to compare
+   foods = [
+       client.get_food(1750340),  # Apple
+       client.get_food(1750341),  # Banana
+       client.get_food(1750342)   # Orange
+   ]
+   
+   # Compare the foods
+   comparison = compare_foods(
+       foods,
+       nutrient_ids=["vitamin_c", "potassium", "fiber"],
+       serving_sizes=[100.0, 100.0, 100.0]
+   )
+   
+   # Print the comparison
+   for nutrient_id, values in comparison.items():
+       print(f"{nutrient_id}:")
+       for food, amount, unit in values:
+           print(f"  {food}: {amount:.1f} {unit}")
+
+Analyzing Recipes
+--------------
+
+Create and analyze a recipe:
+
+.. code-block:: python
+
+   from usda_fdc.analysis.recipe import create_recipe, analyze_recipe
+   
+   # Create a recipe
+   recipe = create_recipe(
+       name="Fruit Salad",
+       ingredient_texts=[
+           "1 apple",
+           "1 banana",
+           "100g strawberries"
+       ],
+       client=client,
+       servings=2
+   )
+   
+   # Analyze the recipe
+   analysis = analyze_recipe(recipe)
+   
+   # Access the analysis results
+   per_serving = analysis.per_serving_analysis
+   print(f"Calories per serving: {per_serving.calories_per_serving:.1f} kcal")
+   print(f"Protein per serving: {per_serving.get_nutrient('protein').amount:.1f} g")
+
 Command Line Interface
 --------------------
 
-The package includes a command-line tool called ``fdc`` that provides quick access to common operations:
+The library includes a command-line tool called ``fdc`` that provides quick access to common operations:
 
 .. code-block:: bash
 
    # Search for foods
-   fdc search "apple" --page-size 5
+   fdc search "apple"
    
    # Get food details
    fdc food 1750340
@@ -116,10 +203,21 @@ The package includes a command-line tool called ``fdc`` that provides quick acce
    # Get nutrients for a food
    fdc nutrients 1750340
    
-   # List foods
-   fdc list --page-size 10 --page-number 1
+   # List foods with pagination
+   fdc list --page-size 5 --page-number 1
 
-For more details on the CLI, see :doc:`cli`.
+For nutrient analysis, use the ``fdc-analyze`` command:
+
+.. code-block:: bash
+
+   # Analyze a food
+   fdc-analyze analyze 1750340 --serving-size 100
+   
+   # Compare foods
+   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
+   
+   # Analyze a recipe
+   fdc-analyze recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
 
 Error Handling
 ------------

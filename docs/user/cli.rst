@@ -1,30 +1,24 @@
 Command-Line Interface
 =====================
 
-The USDA FDC library includes a command-line interface (CLI) that provides quick access to food data without writing any code.
+The USDA FDC library includes two command-line interfaces:
+- ``fdc`` for accessing the Food Data Central API
+- ``fdc-analyze`` for nutrient analysis
 
-Installation
------------
+FDC Command-Line Interface
+------------------------
 
-The CLI is automatically installed when you install the package:
-
-.. code-block:: bash
-
-   pip install usda-fdc
+The ``fdc`` command provides quick access to food data without writing any code.
 
 Basic Usage
----------
-
-The main command is ``fdc``, followed by a subcommand:
+~~~~~~~~~
 
 .. code-block:: bash
 
    fdc [options] <command> [command-options]
 
 Global Options
-------------
-
-The following options apply to all commands:
+~~~~~~~~~~~~
 
 .. code-block:: bash
 
@@ -34,10 +28,10 @@ The following options apply to all commands:
    --help              Show help message and exit
 
 Commands
--------
+~~~~~~~
 
 search
-~~~~~~
+^^^^^^
 
 Search for foods using keywords:
 
@@ -45,16 +39,8 @@ Search for foods using keywords:
 
    fdc search "apple" --page-size 10 --page-number 1
 
-Options:
-
-.. code-block:: bash
-
-   --data-type TYPE    Filter by data type (can be specified multiple times)
-   --page-size SIZE    Results per page (default: 10)
-   --page-number NUM   Page number (default: 1)
-
 food
-~~~~
+^^^^
 
 Get detailed information about a specific food:
 
@@ -63,7 +49,7 @@ Get detailed information about a specific food:
    fdc food 1750340
 
 nutrients
-~~~~~~~~
+^^^^^^^^
 
 Get nutrient information for a specific food:
 
@@ -72,7 +58,7 @@ Get nutrient information for a specific food:
    fdc nutrients 1750340
 
 list
-~~~~
+^^^^
 
 List foods with pagination:
 
@@ -80,13 +66,85 @@ List foods with pagination:
 
    fdc list --page-size 10 --page-number 1
 
+Nutrient Analysis Command-Line Interface
+-------------------------------------
+
+The ``fdc-analyze`` command provides tools for analyzing nutrient content.
+
+Basic Usage
+~~~~~~~~~
+
+.. code-block:: bash
+
+   fdc-analyze [options] <command> [command-options]
+
+Global Options
+~~~~~~~~~~~~
+
+.. code-block:: bash
+
+   --api-key KEY       FDC API key (can also be set via FDC_API_KEY environment variable)
+   --help              Show help message and exit
+
+Commands
+~~~~~~~
+
+analyze
+^^^^^^^
+
+Analyze a food:
+
+.. code-block:: bash
+
+   fdc-analyze analyze 1750340 --serving-size 100 --format html --output apple.html
+
 Options:
 
 .. code-block:: bash
 
-   --data-type TYPE    Filter by data type (can be specified multiple times)
-   --page-size SIZE    Results per page (default: 10)
-   --page-number NUM   Page number (default: 1)
+   --serving-size SIZE    Serving size in grams (default: 100)
+   --dri-type TYPE        DRI type to use: rda or ul (default: rda)
+   --gender GENDER        Gender to use: male or female (default: male)
+   --format FORMAT        Output format: text, json, or html (default: text)
+   --output FILE          Output file for HTML format (default: stdout)
+
+compare
+^^^^^^^
+
+Compare multiple foods:
+
+.. code-block:: bash
+
+   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
+
+Options:
+
+.. code-block:: bash
+
+   --nutrients LIST       Comma-separated list of nutrient IDs to compare
+   --serving-size SIZE    Serving size in grams (default: 100)
+   --format FORMAT        Output format: text or json (default: text)
+
+recipe
+^^^^^^
+
+Analyze a recipe:
+
+.. code-block:: bash
+
+   fdc-analyze recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
+
+Options:
+
+.. code-block:: bash
+
+   --name NAME            Name of the recipe (default: Recipe)
+   --ingredients LIST     Ingredients (e.g., "1 cup flour")
+   --ingredients-file FILE File containing ingredients (one per line)
+   --servings NUM         Number of servings (default: 1)
+   --dri-type TYPE        DRI type to use: rda or ul (default: rda)
+   --gender GENDER        Gender to use: male or female (default: male)
+   --format FORMAT        Output format: text or json (default: text)
 
 Examples
 -------
@@ -114,6 +172,24 @@ List only branded foods:
 .. code-block:: bash
 
    fdc list --data-type "Branded"
+
+Analyze a food and generate an HTML report:
+
+.. code-block:: bash
+
+   fdc-analyze analyze 1750340 --format html --output apple.html
+
+Compare the vitamin C content of different fruits:
+
+.. code-block:: bash
+
+   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c
+
+Analyze a recipe from a file:
+
+.. code-block:: bash
+
+   fdc-analyze recipe --name "Fruit Salad" --ingredients-file ingredients.txt
 
 Using Environment Variables
 ------------------------

@@ -30,6 +30,8 @@ Key Features
 * **Comprehensive Data Models**: Structured models for all FDC data types
 * **Unit Conversion**: Convert between different food measurement units
 * **Batch Operations**: Efficiently process multiple food items
+* **Nutrient Analysis**: Analyze nutrient content and compare to dietary reference intakes
+* **Recipe Analysis**: Calculate nutritional information for recipes
 
 Installation
 -----------
@@ -42,7 +44,7 @@ Or install from source:
 
 .. code-block:: bash
 
-   git clone https://github.com/mcgarrah/usda_fdc_python.git
+   git clone https://github.com/mcgarrah/usda_fdc_python
    cd usda_fdc_python
    pip install -e .
 
@@ -58,6 +60,7 @@ Contents
    user/configuration
    user/django_integration
    user/cli
+   user/nutrient_analysis
    user/advanced_usage
    user/error_handling
 
@@ -68,6 +71,7 @@ Contents
    api/client
    api/models
    api/django
+   api/analysis
    api/utils
    api/exceptions
    api/cli

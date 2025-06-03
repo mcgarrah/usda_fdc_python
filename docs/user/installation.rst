@@ -27,8 +27,8 @@ You can also install the package directly from the source code:
 
 .. code-block:: bash
 
-   git clone https://github.com/yourusername/usda_fdc.git
-   cd usda_fdc
+   git clone https://github.com/mcgarrah/usda_fdc_python
+   cd usda_fdc_python
    pip install -e .
 
 Development Installation
@@ -45,15 +45,6 @@ Or using the requirements files:
 .. code-block:: bash
 
    pip install -r requirements-dev.txt
-
-This will install additional packages needed for development and testing:
-
-* ``pytest`` for running tests
-* ``pytest-cov`` for test coverage
-* ``black`` for code formatting
-* ``isort`` for import sorting
-* ``mypy`` for type checking
-* ``flake8`` for linting
 
 Django Integration
 ---------------

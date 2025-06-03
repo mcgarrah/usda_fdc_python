@@ -15,6 +15,9 @@ A comprehensive Python library for interacting with the USDA Food Data Central A
 - Conversion utilities for different measurement units
 - Batch operations for efficient API usage
 - Command-line interface for quick data access
+- Nutrient analysis with dietary reference intake comparisons
+- Recipe analysis with ingredient parsing and nutritional calculations
+- Visualization tools for nutrient data
 - Detailed documentation and examples
 
 ## Installation
@@ -27,7 +30,7 @@ Or install from source:
 
 ```bash
 git clone https://github.com/mcgarrah/usda_fdc_python.git
-cd usda_fdc_python
+cd usda_fdc
 pip install -e .
 ```
 
@@ -79,6 +82,65 @@ fdc list --page-size 5 --page-number 1
 fdc --help
 ```
 
+## Nutrient Analysis
+
+The library includes tools for analyzing nutrient content:
+
+```python
+from usda_fdc import FdcClient
+from usda_fdc.analysis import analyze_food, DriType, Gender
+
+# Initialize the client
+client = FdcClient("YOUR_API_KEY")
+
+# Get a food
+food = client.get_food(1750340)  # Apple, raw, with skin
+
+# Analyze the food
+analysis = analyze_food(
+    food,
+    dri_type=DriType.RDA,
+    gender=Gender.MALE,
+    serving_size=100.0
+)
+
+# Access the analysis results
+print(f"Calories: {analysis.calories_per_serving} kcal")
+print(f"Protein: {analysis.get_nutrient('protein').amount} g")
+print(f"Vitamin C: {analysis.get_nutrient('vitamin_c').amount} mg")
+```
+
+## Recipe Analysis
+
+The library also supports recipe analysis:
+
+```python
+from usda_fdc import FdcClient
+from usda_fdc.analysis.recipe import create_recipe, analyze_recipe
+
+# Initialize the client
+client = FdcClient("YOUR_API_KEY")
+
+# Create a recipe
+recipe = create_recipe(
+    name="Fruit Salad",
+    ingredient_texts=[
+        "1 apple",
+        "1 banana",
+        "100g strawberries"
+    ],
+    client=client,
+    servings=2
+)
+
+# Analyze the recipe
+analysis = analyze_recipe(recipe)
+
+# Access the analysis results
+per_serving = analysis.per_serving_analysis
+print(f"Calories per serving: {per_serving.calories_per_serving} kcal")
+```
+
 ## Django Integration
 
 The library is designed to work seamlessly with Django applications:
@@ -118,12 +180,6 @@ pytest -m django
 
 # Run tests with coverage
 pytest --cov=usda_fdc
-```
-
-For integration tests, set your API key as an environment variable:
-
-```bash
-export FDC_API_KEY=your_api_key_here
 ```
 
 ## Documentation

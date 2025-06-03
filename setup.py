@@ -9,7 +9,7 @@ with open("README.md", encoding="utf-8") as f:
 
 setup(
     name="usda-fdc",
-    version="0.1.3",
+    version="0.1.4",
     description="A comprehensive Python library for interacting with the USDA Food Data Central API",
     long_description=long_description,
     long_description_content_type="text/markdown",
@@ -48,10 +48,19 @@ setup(
             "sphinx>=4.0.2",
             "sphinx-rtd-theme>=0.5.2",
         ],
+        "analysis": [
+            "matplotlib>=3.4.0",
+            "numpy>=1.20.0",
+        ],
     },
     entry_points={
         "console_scripts": [
             "fdc=usda_fdc.cli:main",
+            "fdc-analyze=usda_fdc.analysis.cli:main",
         ],
+    },
+    include_package_data=True,
+    package_data={
+        "usda_fdc.analysis": ["resources/dri/*.json"],
     },
 )
