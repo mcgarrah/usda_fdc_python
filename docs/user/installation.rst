@@ -27,7 +27,7 @@ You can also install the package directly from the source code:
 
 .. code-block:: bash
 
-   git clone https://github.com/yourusername/usda_fdc.git
+   git clone https://github.com/mcgarrah/usda_fdc_python.git
    cd usda_fdc
    pip install -e .
 

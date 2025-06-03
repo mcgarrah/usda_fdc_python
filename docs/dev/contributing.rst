@@ -12,7 +12,7 @@ Setting Up Development Environment
 
    .. code-block:: bash
 
-      git clone https://github.com/yourusername/usda_fdc.git
+      git clone https://github.com/mcgarrah/usda_fdc_python.git
       cd usda_fdc
 
 3. Install development dependencies:
