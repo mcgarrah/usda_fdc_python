@@ -184,13 +184,13 @@ pytest --cov=usda_fdc
 
 ## Documentation
 
-For detailed documentation, visit [docs.example.com/usda_fdc](https://docs.example.com/usda_fdc).
+For detailed documentation, visit [usda-fdc.readthedocs.io](https://usda-fdc.readthedocs.io/).
 
 ## Configuration
 
 Create a `.env` file in your project root with the following variables:
 
-```
+```ini
 FDC_API_KEY=your_api_key_here
 FDC_API_URL=https://api.nal.usda.gov/fdc/v1
 FDC_CACHE_ENABLED=True

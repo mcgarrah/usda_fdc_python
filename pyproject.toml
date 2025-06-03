@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "usda_fdc"
-version = "0.1.5"
+version = "0.1.6"
 description = "A comprehensive Python library for interacting with the USDA Food Data Central API"
 readme = "README.md"
 authors = [{ name = "Michael McGarrah", email = "mcgarrah@gmail.com" }]
