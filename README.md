@@ -30,7 +30,7 @@ Or install from source:
 
 ```bash
 git clone https://github.com/mcgarrah/usda_fdc_python.git
-cd usda_fdc
+cd usda_fdc_python
 pip install -e .
 ```
 
@@ -60,7 +60,11 @@ for nutrient in nutrients:
 
 ## Command-Line Interface
 
-The library includes a command-line interface for quick access to FDC data:
+The library includes two command-line interfaces:
+
+### FDC Client CLI
+
+For quick access to FDC data:
 
 ```bash
 # Set your API key (or use --api-key parameter)
@@ -80,6 +84,27 @@ fdc list --page-size 5 --page-number 1
 
 # Get help
 fdc --help
+```
+
+### Nutrient Analysis Tool (NAT)
+
+For analyzing nutrient content and recipes:
+
+```bash
+# Analyze a food
+fdc-nat analyze 1750340 --serving-size 100
+
+# Compare multiple foods
+fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
+
+# Analyze a recipe
+fdc-nat recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
+
+# Generate HTML report
+fdc-nat analyze 1750340 --format html --output report.html
+
+# Get help
+fdc-nat --help
 ```
 
 ## Nutrient Analysis
@@ -141,6 +166,28 @@ per_serving = analysis.per_serving_analysis
 print(f"Calories per serving: {per_serving.calories_per_serving} kcal")
 ```
 
+## Visualization
+
+The library includes tools for visualizing nutrient data:
+
+```python
+from usda_fdc import FdcClient
+from usda_fdc.analysis import analyze_food
+from usda_fdc.analysis.visualization import generate_html_report
+
+# Initialize the client
+client = FdcClient("YOUR_API_KEY")
+
+# Get and analyze a food
+food = client.get_food(1750340)
+analysis = analyze_food(food)
+
+# Generate HTML report
+html = generate_html_report(analysis)
+with open("report.html", "w") as f:
+    f.write(html)
+```
+
 ## Django Integration
 
 The library is designed to work seamlessly with Django applications:
@@ -195,6 +242,24 @@ FDC_API_KEY=your_api_key_here
 FDC_API_URL=https://api.nal.usda.gov/fdc/v1
 FDC_CACHE_ENABLED=True
 FDC_CACHE_TIMEOUT=86400
+```
+
+## Examples
+
+The library includes several example scripts in the `examples` directory:
+
+- Basic search and retrieval
+- Food details and nutrient information
+- Nutrient analysis and comparison
+- Recipe analysis
+- Django integration
+- Advanced analysis with meal planning
+- Command-line tool usage
+
+Run the examples with:
+
+```bash
+python examples/01_basic_search.py
 ```
 
 ## Contributing

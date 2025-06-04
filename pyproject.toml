@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "usda_fdc"
-version = "0.1.6"
+version = "0.1.7"
 description = "A comprehensive Python library for interacting with the USDA Food Data Central API"
 readme = "README.md"
 authors = [{ name = "Michael McGarrah", email = "mcgarrah@gmail.com" }]
@@ -42,9 +42,11 @@ Issues = "https://github.com/mcgarrah/usda_fdc_python/issues"
 
 [project.scripts]
 fdc = "usda_fdc.cli:main"
+fdc-nat = "usda_fdc.analysis.cli:main"
 
 [tool.setuptools]
 packages = ["usda_fdc"]
+package-data = {"usda_fdc" = ["analysis/resources/dri/*.json"]}
 
 [tool.black]
 line-length = 100

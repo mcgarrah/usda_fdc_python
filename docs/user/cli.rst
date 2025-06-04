@@ -1,150 +1,204 @@
 Command-Line Interface
-=====================
+====================
 
-The USDA FDC library includes two command-line interfaces:
-- ``fdc`` for accessing the Food Data Central API
-- ``fdc-analyze`` for nutrient analysis
+The USDA FDC Python Client provides two command-line interfaces:
 
-FDC Command-Line Interface
-------------------------
+1. ``fdc`` - The main client interface for accessing FDC data
+2. ``fdc-nat`` - The Nutrient Analysis Tool for analyzing foods and recipes
 
-The ``fdc`` command provides quick access to food data without writing any code.
+FDC Client CLI
+-------------
 
-Basic Usage
-~~~~~~~~~
+The ``fdc`` command provides direct access to the USDA FDC API:
 
 .. code-block:: bash
 
-   fdc [options] <command> [command-options]
+   # Set your API key (or use --api-key parameter)
+   export FDC_API_KEY=your_api_key_here
 
-Global Options
-~~~~~~~~~~~~
+   # Search for foods
+   fdc search "apple"
 
-.. code-block:: bash
+   # Get detailed information for a specific food
+   fdc food 1750340
 
-   --api-key KEY       FDC API key (can also be set via FDC_API_KEY environment variable)
-   --format FORMAT     Output format: json, pretty, or text (default: pretty)
-   --version           Show version and exit
-   --help              Show help message and exit
+   # Get nutrients for a food
+   fdc nutrients 1750340
+
+   # List foods with pagination
+   fdc list --page-size 5 --page-number 1
 
 Commands
-~~~~~~~
+^^^^^^^^
 
 search
-^^^^^^
+~~~~~~
 
 Search for foods using keywords:
 
 .. code-block:: bash
 
-   fdc search "apple" --page-size 10 --page-number 1
+   fdc search "apple" --data-type Branded --page-size 10
+
+Arguments:
+
+- ``query``: Search query
+- ``--data-type``: Filter by data type (e.g., Branded, Foundation)
+- ``--page-size``: Results per page (default: 50)
+- ``--page-number``: Page number (default: 1)
+- ``--sort-by``: Field to sort by
+- ``--sort-order``: Sort direction (asc or desc)
+- ``--format``: Output format (text, json, pretty)
 
 food
-^^^^
+~~~~
 
-Get detailed information about a specific food:
+Get detailed information for a specific food:
 
 .. code-block:: bash
 
-   fdc food 1750340
+   fdc food 1750340 --format json
+
+Arguments:
+
+- ``fdc_id``: FDC ID of the food
+- ``--format``: Output format (text, json, pretty)
 
 nutrients
-^^^^^^^^
+~~~~~~~~
 
-Get nutrient information for a specific food:
+Get nutrients for a specific food:
 
 .. code-block:: bash
 
    fdc nutrients 1750340
 
+Arguments:
+
+- ``fdc_id``: FDC ID of the food
+- ``--format``: Output format (text, json, pretty)
+
 list
-^^^^
+~~~~
 
 List foods with pagination:
 
 .. code-block:: bash
 
-   fdc list --page-size 10 --page-number 1
+   fdc list --data-type Foundation --page-size 10
 
-Nutrient Analysis Command-Line Interface
--------------------------------------
+Arguments:
 
-The ``fdc-analyze`` command provides tools for analyzing nutrient content.
+- ``--data-type``: Filter by data type (e.g., Branded, Foundation)
+- ``--page-size``: Results per page (default: 50)
+- ``--page-number``: Page number (default: 1)
+- ``--sort-by``: Field to sort by
+- ``--sort-order``: Sort direction (asc or desc)
+- ``--format``: Output format (text, json, pretty)
 
-Basic Usage
-~~~~~~~~~
+Nutrient Analysis Tool (NAT)
+--------------------------
+
+The ``fdc-nat`` command provides tools for analyzing nutrient content and recipes:
 
 .. code-block:: bash
 
-   fdc-analyze [options] <command> [command-options]
+   # Analyze a food
+   fdc-nat analyze 1750340 --serving-size 100
 
-Global Options
-~~~~~~~~~~~~
+   # Compare multiple foods
+   fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
 
-.. code-block:: bash
+   # Analyze a recipe
+   fdc-nat recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
 
-   --api-key KEY       FDC API key (can also be set via FDC_API_KEY environment variable)
-   --help              Show help message and exit
+   # Generate HTML report
+   fdc-nat analyze 1750340 --format html --output report.html
 
 Commands
-~~~~~~~
+^^^^^^^^
 
 analyze
-^^^^^^^
+~~~~~~~
 
-Analyze a food:
-
-.. code-block:: bash
-
-   fdc-analyze analyze 1750340 --serving-size 100 --format html --output apple.html
-
-Options:
+Analyze the nutrient content of a food:
 
 .. code-block:: bash
 
-   --serving-size SIZE    Serving size in grams (default: 100)
-   --dri-type TYPE        DRI type to use: rda or ul (default: rda)
-   --gender GENDER        Gender to use: male or female (default: male)
-   --format FORMAT        Output format: text, json, or html (default: text)
-   --output FILE          Output file for HTML format (default: stdout)
+   fdc-nat analyze 1750340 --serving-size 100 --dri-type rda --gender male --age 30
+
+Arguments:
+
+- ``fdc_id``: FDC ID of the food
+- ``--serving-size``: Serving size in grams (default: 100)
+- ``--dri-type``: DRI type (rda, ai, ul, ear, amdr)
+- ``--gender``: Gender for DRI (male, female)
+- ``--age``: Age for DRI (default: 30)
+- ``--detailed``: Show detailed nutrient information
+- ``--format``: Output format (text, json, html)
+- ``--output``: Output file (default: stdout)
 
 compare
-^^^^^^^
+~~~~~~~
 
-Compare multiple foods:
-
-.. code-block:: bash
-
-   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
-
-Options:
+Compare the nutrient content of multiple foods:
 
 .. code-block:: bash
 
-   --nutrients LIST       Comma-separated list of nutrient IDs to compare
-   --serving-size SIZE    Serving size in grams (default: 100)
-   --format FORMAT        Output format: text or json (default: text)
+   fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
+
+Arguments:
+
+- ``fdc_ids``: FDC IDs of the foods to compare
+- ``--serving-size``: Serving size in grams (default: 100)
+- ``--nutrients``: Comma-separated list of nutrient IDs to compare
+- ``--dri-type``: DRI type (rda, ai, ul, ear, amdr)
+- ``--gender``: Gender for DRI (male, female)
+- ``--age``: Age for DRI (default: 30)
+- ``--format``: Output format (text, json)
+- ``--output``: Output file (default: stdout)
 
 recipe
-^^^^^^
+~~~~~~
 
-Analyze a recipe:
-
-.. code-block:: bash
-
-   fdc-analyze recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
-
-Options:
+Analyze the nutrient content of a recipe:
 
 .. code-block:: bash
 
-   --name NAME            Name of the recipe (default: Recipe)
-   --ingredients LIST     Ingredients (e.g., "1 cup flour")
-   --ingredients-file FILE File containing ingredients (one per line)
-   --servings NUM         Number of servings (default: 1)
-   --dri-type TYPE        DRI type to use: rda or ul (default: rda)
-   --gender GENDER        Gender to use: male or female (default: male)
-   --format FORMAT        Output format: text or json (default: text)
+   fdc-nat recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
+
+Arguments:
+
+- ``--name``: Recipe name (default: Recipe)
+- ``--ingredients``: List of ingredients
+- ``--ingredients-file``: File with ingredients (one per line)
+- ``--servings``: Number of servings (default: 1)
+- ``--dri-type``: DRI type (rda, ai, ul, ear, amdr)
+- ``--gender``: Gender for DRI (male, female)
+- ``--age``: Age for DRI (default: 30)
+- ``--detailed``: Show detailed nutrient information
+- ``--format``: Output format (text, json, html)
+- ``--output``: Output file (default: stdout)
+
+Configuration
+-----------
+
+Both command-line tools can be configured using environment variables:
+
+.. code-block:: bash
+
+   # Set API key
+   export FDC_API_KEY=your_api_key_here
+
+   # Set API URL (optional)
+   export FDC_API_URL=https://api.nal.usda.gov/fdc/v1
+
+You can also use a ``.env`` file in your current directory:
+
+.. code-block:: ini
+
+   FDC_API_KEY=your_api_key_here
+   FDC_API_URL=https://api.nal.usda.gov/fdc/v1
 
 Examples
 -------
@@ -153,60 +207,34 @@ Search for foods containing "apple":
 
 .. code-block:: bash
 
-   fdc search "apple"
+   fdc search "apple" --page-size 5
 
-Get detailed information about a specific food:
+Get detailed information for a specific food:
 
 .. code-block:: bash
 
    fdc food 1750340
 
-Get nutrient information in JSON format:
+Analyze the nutrient content of a food:
 
 .. code-block:: bash
 
-   fdc nutrients 1750340 --format json
+   fdc-nat analyze 1750340 --serving-size 100
 
-List only branded foods:
-
-.. code-block:: bash
-
-   fdc list --data-type "Branded"
-
-Analyze a food and generate an HTML report:
+Compare the nutrient content of multiple foods:
 
 .. code-block:: bash
 
-   fdc-analyze analyze 1750340 --format html --output apple.html
+   fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
 
-Compare the vitamin C content of different fruits:
-
-.. code-block:: bash
-
-   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c
-
-Analyze a recipe from a file:
+Analyze a recipe:
 
 .. code-block:: bash
 
-   fdc-analyze recipe --name "Fruit Salad" --ingredients-file ingredients.txt
+   fdc-nat recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
 
-Using Environment Variables
-------------------------
-
-You can set the API key using an environment variable:
+Generate an HTML report:
 
 .. code-block:: bash
 
-   export FDC_API_KEY=your_api_key_here
-   fdc search "apple"
-
-Or using a .env file in your current directory:
-
-.. code-block:: bash
-
-   # .env file
-   FDC_API_KEY=your_api_key_here
-
-   # Then run
-   fdc search "apple"
+   fdc-nat analyze 1750340 --format html --output report.html

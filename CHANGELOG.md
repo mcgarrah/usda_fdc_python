@@ -2,6 +2,23 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [0.1.7] - 2025-06-04
+
+### Added
+- Implemented comprehensive recipe analysis functionality
+- Added ingredient parsing and nutritional calculation for recipes
+- Created visualization tools for nutrient data with HTML reports
+- Added RELEASE.md with release process instructions
+- Updated documentation with new features and examples
+
+### Changed
+- Renamed command-line tool from fdc-analyze to fdc-nat (Nutrient Analysis Tool)
+- Updated package configuration in both setup.py and pyproject.toml
+
+### Fixed
+- Fixed version update script to properly handle all version references
+- Fixed dotenv loading in client module
+
 ## [0.1.6] - 2025-06-03
 
 ### Added

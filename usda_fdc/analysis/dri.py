@@ -1,138 +1,96 @@
 """
-Dietary Reference Intakes (DRI) module.
-
-This module provides access to Dietary Reference Intakes (DRI) data,
-including Recommended Dietary Allowances (RDA), Adequate Intakes (AI),
-and Tolerable Upper Intake Levels (UL).
+Dietary Reference Intake (DRI) data and utilities.
 """
 
-import json
 import os
+import json
 from enum import Enum
 from typing import Dict, Optional, Any, Union
 
-import pkg_resources
+# Path to DRI data files
+DRI_DATA_DIR = os.path.join(os.path.dirname(__file__), "resources", "dri")
 
+class Gender(str, Enum):
+    """Gender for DRI calculations."""
+    MALE = "male"
+    FEMALE = "female"
 
-class DriType(Enum):
+class DriType(str, Enum):
     """Types of Dietary Reference Intakes."""
     RDA = "rda"  # Recommended Dietary Allowance
     AI = "ai"    # Adequate Intake
     UL = "ul"    # Tolerable Upper Intake Level
+    EAR = "ear"  # Estimated Average Requirement
+    AMDR = "amdr"  # Acceptable Macronutrient Distribution Range
 
+# Cache for DRI data
+_dri_cache: Dict[str, Dict] = {}
 
-class Gender(Enum):
-    """Gender options for DRI data."""
-    MALE = "male"
-    FEMALE = "female"
-
-
-# Define DRI types for easier access
-DRI_TYPES = {
-    "rda": DriType.RDA,
-    "ai": DriType.AI,
-    "ul": DriType.UL
-}
-
-
-class DietaryReferenceIntakes:
+def _load_dri_data(dri_type: DriType) -> Dict:
     """
-    Provides access to Dietary Reference Intakes (DRI) data.
-    
-    Attributes:
-        data: The loaded DRI data.
-        metadata: Metadata about the DRI data.
-    """
-    
-    def __init__(self, dri_type: DriType = DriType.RDA, gender: Gender = Gender.MALE):
-        """
-        Initialize DietaryReferenceIntakes.
-        
-        Args:
-            dri_type: The type of DRI to load (RDA, AI, or UL).
-            gender: The gender to load data for (only applicable for RDA and AI).
-        """
-        self.dri_type = dri_type
-        self.gender = gender
-        self.data: Dict[str, float] = {}
-        self.metadata: Dict[str, Any] = {}
-        self._load_data()
-    
-    def _load_data(self) -> None:
-        """Load the DRI data from the appropriate file."""
-        # Determine the file path based on the DRI type and gender
-        if self.dri_type == DriType.UL:
-            file_name = "ul.json"
-        elif self.dri_type in (DriType.RDA, DriType.AI):
-            if self.gender == Gender.MALE:
-                file_name = "rda_male.json"
-            else:
-                file_name = "rda_female.json"
-        else:
-            raise ValueError(f"Unknown DRI type: {self.dri_type}")
-        
-        # Get the file path
-        file_path = os.path.join(
-            os.path.dirname(__file__),
-            "resources",
-            "dri",
-            file_name
-        )
-        
-        # Load the data
-        try:
-            with open(file_path, "r") as f:
-                data = json.load(f)
-                self.data = data.get("dietary_reference_intakes", {})
-                self.metadata = data.get("metadata", {})
-        except (FileNotFoundError, json.JSONDecodeError) as e:
-            raise ValueError(f"Error loading DRI data: {e}")
-    
-    def get_dri(self, nutrient_id: str) -> Optional[float]:
-        """
-        Get the DRI value for a nutrient.
-        
-        Args:
-            nutrient_id: The nutrient ID.
-            
-        Returns:
-            The DRI value if available, None otherwise.
-        """
-        return self.data.get(nutrient_id)
-    
-    def get_all_dris(self) -> Dict[str, float]:
-        """
-        Get all DRI values.
-        
-        Returns:
-            A dictionary of nutrient IDs to DRI values.
-        """
-        return self.data.copy()
-
-
-def get_dri(
-    nutrient_id: str,
-    dri_type: Union[DriType, str] = DriType.RDA,
-    gender: Union[Gender, str] = Gender.MALE
-) -> Optional[float]:
-    """
-    Get the DRI value for a nutrient.
+    Load DRI data from JSON file.
     
     Args:
-        nutrient_id: The nutrient ID.
-        dri_type: The type of DRI to get.
-        gender: The gender to get the DRI for.
+        dri_type: The type of DRI to load.
         
     Returns:
-        The DRI value if available, None otherwise.
+        Dictionary containing DRI data.
     """
-    # Convert string inputs to enum values if needed
-    if isinstance(dri_type, str):
-        dri_type = DRI_TYPES.get(dri_type.lower(), DriType.RDA)
+    if dri_type.value in _dri_cache:
+        return _dri_cache[dri_type.value]
     
-    if isinstance(gender, str):
-        gender = Gender.MALE if gender.lower() == "male" else Gender.FEMALE
+    file_path = os.path.join(DRI_DATA_DIR, f"{dri_type.value}.json")
     
-    # Get the DRI data
-    dri = DietaryReferenceIntakes(dri_type, gender)
-    return dri.get_dri(nutrient_id)
+    try:
+        with open(file_path, 'r') as f:
+            data = json.load(f)
+            _dri_cache[dri_type.value] = data
+            return data
+    except FileNotFoundError:
+        # Return empty data if file not found
+        return {}
+
+def get_dri(
+    nutrient_id: Union[str, int],
+    dri_type: DriType = DriType.RDA,
+    gender: Gender = Gender.MALE,
+    age: int = 30
+) -> Optional[float]:
+    """
+    Get the Dietary Reference Intake (DRI) for a nutrient.
+    
+    Args:
+        nutrient_id: The nutrient ID or name.
+        dri_type: The type of DRI to retrieve.
+        gender: The gender to use for the DRI.
+        age: The age to use for the DRI.
+        
+    Returns:
+        The DRI value, or None if not found.
+    """
+    # Convert nutrient_id to string
+    nutrient_id = str(nutrient_id).lower()
+    
+    # Load DRI data
+    dri_data = _load_dri_data(dri_type)
+    
+    # Check if nutrient exists in data
+    if nutrient_id not in dri_data:
+        return None
+    
+    # Get age groups for the gender
+    gender_data = dri_data[nutrient_id].get(gender.value, {})
+    
+    # Find the appropriate age group
+    for age_range, value in gender_data.items():
+        # Parse age range
+        if "-" in age_range:
+            min_age, max_age = map(int, age_range.split("-"))
+            if min_age <= age <= max_age:
+                return value
+        elif age_range.endswith("+"):
+            min_age = int(age_range[:-1])
+            if age >= min_age:
+                return value
+    
+    return None

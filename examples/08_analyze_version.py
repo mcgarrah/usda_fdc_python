@@ -2,7 +2,7 @@
 """
 Example of using the nutrient analysis command-line interface.
 
-This script demonstrates how to use the fdc-analyze command-line tool
+This script demonstrates how to use the fdc-nat command-line tool
 by executing it as a subprocess. It's equivalent to running the commands
 directly in the terminal.
 """
@@ -33,23 +33,23 @@ def main():
     # Set API key for commands
     os.environ["FDC_API_KEY"] = api_key
     
-    print("=== USDA FDC Nutrient Analysis CLI Examples ===")
+    print("=== USDA FDC Nutrient Analysis Tool Examples ===")
     
     # Example 1: Analyze a food
     print("\n=== Example 1: Analyze a food ===")
-    run_command("fdc-analyze analyze 1750340 --serving-size 100")
+    run_command("fdc-nat analyze 1750340 --serving-size 100")
     
     # Example 2: Analyze a food with HTML output
     print("\n=== Example 2: Analyze a food with HTML output ===")
     with tempfile.NamedTemporaryFile(suffix=".html", delete=False) as temp:
         html_file = temp.name
     
-    run_command(f"fdc-analyze analyze 1750340 --format html --output {html_file}")
+    run_command(f"fdc-nat analyze 1750340 --format html --output {html_file}")
     print(f"HTML report saved to {html_file}")
     
     # Example 3: Compare foods
     print("\n=== Example 3: Compare foods ===")
-    run_command("fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber")
+    run_command("fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber")
     
     # Example 4: Analyze a recipe
     print("\n=== Example 4: Analyze a recipe ===")
@@ -61,7 +61,7 @@ def main():
         temp.write("100g strawberries\n")
         ingredients_file = temp.name
     
-    run_command(f"fdc-analyze recipe --name 'Fruit Salad' --ingredients-file {ingredients_file} --servings 2")
+    run_command(f"fdc-nat recipe --name 'Fruit Salad' --ingredients-file {ingredients_file} --servings 2")
     
     # Clean up temporary files
     os.unlink(html_file)
