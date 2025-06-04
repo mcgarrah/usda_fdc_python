@@ -2,6 +2,25 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [0.1.9] - 2025-06-06
+
+### Added
+- Added comprehensive examples documentation in docs/user/examples.rst
+- Added meal planning example (09_meal_planning.py) for creating and analyzing meal plans
+- Added visualization example (10_visualization.py) for creating interactive charts
+- Added breakfast_dri_chart.json sample data for visualization examples
+- Added examples/data directory for sample data files
+
+### Changed
+- Renamed example scripts for better organization:
+  - 06_meal_planning.py → 09_meal_planning.py
+  - 07_visualization.py → 10_visualization.py
+- Updated examples/README.md with descriptions of all example scripts
+
+### Fixed
+- Fixed attribute reference in nutrient analysis example (display_name → name)
+- Improved error handling in visualization module
+
 ## [0.1.8] - 2025-06-05
 
 ### Fixed
