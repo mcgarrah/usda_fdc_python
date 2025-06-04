@@ -7,6 +7,11 @@ Skip these tests if no API key is provided.
 
 import os
 import pytest
+from dotenv import load_dotenv
+
+# Load environment variables from .env file
+load_dotenv()
+
 from usda_fdc import FdcClient
 
 # Skip if no API key is provided
