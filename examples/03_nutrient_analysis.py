@@ -48,7 +48,7 @@ def main():
         nutrient_value = analysis.get_nutrient(nutrient_id)
         if nutrient_value:
             dri_percent = f"{nutrient_value.dri_percent:.1f}%" if nutrient_value.dri_percent is not None else "N/A"
-            print(f"- {nutrient_value.nutrient.display_name}: {nutrient_value.amount:.1f} {nutrient_value.unit} ({dri_percent} of DRI)")
+            print(f"- {nutrient_value.nutrient.name}: {nutrient_value.amount:.1f} {nutrient_value.unit} ({dri_percent} of DRI)")
     
     # Compare with female DRI values
     print("\nComparing with female DRI values...")
@@ -64,7 +64,7 @@ def main():
         nutrient_value = female_analysis.get_nutrient(nutrient_id)
         if nutrient_value:
             dri_percent = f"{nutrient_value.dri_percent:.1f}%" if nutrient_value.dri_percent is not None else "N/A"
-            print(f"- {nutrient_value.nutrient.display_name}: {nutrient_value.amount:.1f} {nutrient_value.unit} ({dri_percent} of DRI)")
+            print(f"- {nutrient_value.nutrient.name}: {nutrient_value.amount:.1f} {nutrient_value.unit} ({dri_percent} of DRI)")
 
 if __name__ == "__main__":
     main()
