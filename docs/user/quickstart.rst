@@ -206,18 +206,18 @@ The library includes a command-line tool called ``fdc`` that provides quick acce
    # List foods with pagination
    fdc list --page-size 5 --page-number 1
 
-For nutrient analysis, use the ``fdc-analyze`` command:
+For nutrient analysis, use the ``fdc-nat`` command:
 
 .. code-block:: bash
 
    # Analyze a food
-   fdc-analyze analyze 1750340 --serving-size 100
+   fdc-nat analyze 1750340 --serving-size 100
    
    # Compare foods
-   fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
+   fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber
    
    # Analyze a recipe
-   fdc-analyze recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
+   fdc-nat recipe --name "Fruit Salad" --ingredients "1 apple" "1 banana" "100g strawberries"
 
 Error Handling
 ------------

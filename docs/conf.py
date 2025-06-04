@@ -14,8 +14,8 @@ import usda_fdc
 
 # -- Project information -----------------------------------------------------
 project = 'USDA Food Data Central (FDC) Python Client'
-copyright = f'{datetime.datetime.now().year}, Your Name'
-author = 'Your Name'
+copyright = f'{datetime.datetime.now().year}, Michael McGarrah'
+author = 'Michael McGarrah'
 
 # The full version, including alpha/beta/rc tags
 release = usda_fdc.__version__

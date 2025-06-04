@@ -293,13 +293,13 @@ The ``08_analyze_version.py`` example demonstrates the nutrient analysis command
    import subprocess
    
    # Analyze a food
-   subprocess.run("fdc-analyze analyze 1750340 --serving-size 100", shell=True)
+   subprocess.run("fdc-nat analyze 1750340 --serving-size 100", shell=True)
    
    # Compare foods
-   subprocess.run("fdc-analyze compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber", shell=True)
+   subprocess.run("fdc-nat compare 1750340 1750341 1750342 --nutrients vitamin_c,potassium,fiber", shell=True)
    
    # Analyze a recipe
-   subprocess.run("fdc-analyze recipe --name 'Fruit Salad' --ingredients '1 apple' '1 banana' '100g strawberries'", shell=True)
+   subprocess.run("fdc-nat recipe --name 'Fruit Salad' --ingredients '1 apple' '1 banana' '100g strawberries'", shell=True)
 
 This example shows:
 
