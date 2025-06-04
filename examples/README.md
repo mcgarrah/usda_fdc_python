@@ -85,9 +85,26 @@ Shows how to use the nutrient analysis command-line interface.
 python 08_analyze_version.py
 ```
 
+### 9. Meal Planning (`09_meal_planning.py`)
+
+Demonstrates how to create and analyze a meal plan with multiple recipes and calculate daily nutritional totals.
+
+```bash
+python 09_meal_planning.py
+```
+
+### 10. Visualization (`10_visualization.py`)
+
+Shows how to create interactive visualizations of nutrient data, including charts and HTML reports.
+
+```bash
+python 10_visualization.py
+```
+
 ## Notes
 
 - These examples require an API key from the USDA Food Data Central API.
 - You can get an API key by registering at https://fdc.nal.usda.gov/api-key-signup.html
 - Some examples generate output files in the current directory.
 - The Django integration example requires Django to be installed.
+- The visualization example requires a web browser to view the generated charts.

@@ -1,0 +1,93 @@
+{
+  "recipe": {
+    "name": "Healthy Breakfast",
+    "servings": 1,
+    "ingredients": [
+      {
+        "name": "1 cup oatmeal, cooked",
+        "amount": 1,
+        "unit": "serving",
+        "weight_g": 240.0
+      },
+      {
+        "name": "1 medium banana",
+        "amount": 1,
+        "unit": "serving",
+        "weight_g": 100.0
+      },
+      {
+        "name": "1 cup milk, 1% fat",
+        "amount": 1,
+        "unit": "serving",
+        "weight_g": 240.0
+      },
+      {
+        "name": "1 tbsp honey",
+        "amount": 1,
+        "unit": "serving",
+        "weight_g": 15.0
+      },
+      {
+        "name": "2 tbsp almonds, sliced",
+        "amount": 1,
+        "unit": "serving",
+        "weight_g": 30.0
+      }
+    ]
+  },
+  "nutrition": {
+    "calories": 1192.5,
+    "macronutrients": {
+      "protein": 199.71875000000003,
+      "carbs": 631.3874999999999,
+      "fat": 159.025,
+      "fiber": 86.9375
+    },
+    "macronutrient_distribution": {
+      "protein": 16.798439750612435,
+      "carbs": 53.10630513179061,
+      "fat": 30.09525511759697
+    },
+    "dri_percentages": {
+      "protein": 356.64062500000006,
+      "fiber": 228.78289473684214,
+      "vitamin_a": 0.0,
+      "vitamin_c": 104.6875,
+      "calcium": 330.5,
+      "iron": 274.296875,
+      "potassium": 134.94485294117644
+    }
+  },
+  "chart_data": {
+    "nutrients": [
+      "Protein",
+      "Fiber",
+      "Vitamin A",
+      "Vitamin C",
+      "Calcium",
+      "Iron",
+      "Potassium"
+    ],
+    "percentages": [
+      356.64062500000006,
+      228.78289473684214,
+      0.0,
+      104.6875,
+      330.5,
+      274.296875,
+      134.94485294117644
+    ],
+    "colors": [
+      "#FF6384",
+      "#36A2EB",
+      "#FFCE56",
+      "#4BC0C0",
+      "#9966FF",
+      "#FF9F40",
+      "#C9CBCF",
+      "#7CFC00",
+      "#00BFFF",
+      "#FF7F50"
+    ]
+  }
+}
