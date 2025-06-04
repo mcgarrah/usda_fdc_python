@@ -46,17 +46,18 @@ def test_missing_api_key():
         if "FDC_API_KEY" in os.environ:
             del os.environ["FDC_API_KEY"]
         
-        # Attempt to create client without API key
-        with pytest.raises(ValueError) as excinfo:
-            FdcClient()
-        
-        assert "No API key provided" in str(excinfo.value)
+        # Patch load_dotenv to return False (no .env file loaded)
+        with patch('usda_fdc.client.load_dotenv', return_value=False):
+            # Attempt to create client without API key
+            with pytest.raises(ValueError) as excinfo:
+                FdcClient()
+            
+            assert "No API key provided" in str(excinfo.value)
     finally:
         # Restore original environment
         if original_key:
             os.environ["FDC_API_KEY"] = original_key
 
-@pytest.mark.skip(reason="dotenv not implemented in client yet")
 def test_dotenv_loading():
     """Test loading API key from .env file."""
     import os
@@ -73,7 +74,7 @@ def test_dotenv_loading():
         
         # Create temporary .env file
         with tempfile.NamedTemporaryFile(mode='w', delete=False) as temp:
-            temp.write('FDC_API_KEY="test_dotenv_key"')
+            temp.write('FDC_API_KEY=test_dotenv_key')
             env_path = temp.name
         
         # Create client with dotenv loading

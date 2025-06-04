@@ -7,6 +7,7 @@ import requests
 import logging
 from typing import Dict, List, Optional, Union, Any
 from urllib.parse import urljoin
+from dotenv import load_dotenv
 
 from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError
 from .models import Food, SearchResult, Nutrient
@@ -39,6 +40,9 @@ class FdcClient:
         Raises:
             ValueError: If no API key is provided or found in environment variables.
         """
+        # Load environment variables from .env file
+        load_dotenv()
+        
         self.api_key = api_key or os.environ.get("FDC_API_KEY")
         if not self.api_key:
             raise ValueError(
