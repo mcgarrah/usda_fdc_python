@@ -2,6 +2,17 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [0.1.8] - 2025-06-05
+
+### Fixed
+- Fixed example script errors in nutrient analysis examples
+- Fixed DRI chart visualization to properly scale percentage values
+- Corrected attribute reference from display_name to name in Nutrient class usage
+- Improved error handling in visualization module
+
+### Added
+- Added breakfast_dri_chart.json for sample visualization data
+
 ## [0.1.7] - 2025-06-04
 
 ### Added
