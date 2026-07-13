@@ -58,3 +58,6 @@ Thumbs.db
 
 # WSLv2
 *:Zone.Identifier
+
+# Local working notes (not for the public repo)
+NOTES.md

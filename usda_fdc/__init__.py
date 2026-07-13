@@ -5,9 +5,15 @@ A comprehensive Python library for interacting with the USDA Food Data Central A
 designed for easy integration with Django applications and local database caching.
 """
 
-__version__ = "0.1.9"
+__version__ = "0.1.10"
 
 from .client import FdcClient
-from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError
+from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError, FdcTimeoutError
 
-__all__ = ["FdcClient", "FdcApiError", "FdcRateLimitError", "FdcAuthError"]
+__all__ = [
+    "FdcClient",
+    "FdcApiError",
+    "FdcRateLimitError",
+    "FdcAuthError",
+    "FdcTimeoutError",
+]

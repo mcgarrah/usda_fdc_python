@@ -9,47 +9,63 @@ from typing import Dict, List, Optional, Union, Any
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 
-from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError
+from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError, FdcTimeoutError
 from .models import Food, SearchResult, Nutrient
 
 logger = logging.getLogger(__name__)
 
+# Seconds to wait for the FDC API before giving up.
+#
+# requests has NO default timeout: without this, a server that accepts the
+# connection and then never answers blocks the calling thread forever — not
+# for a while, forever. That is especially punishing for async consumers, who
+# run this synchronous client in a thread pool: their own asyncio.wait_for
+# frees the caller but cannot cancel the blocking call underneath, so the
+# thread is lost for the life of the process.
+DEFAULT_TIMEOUT = 30.0
+
 class FdcClient:
     """
     Client for interacting with the USDA Food Data Central API.
-    
+
     Attributes:
         api_key (str): The API key for authenticating with the FDC API.
         base_url (str): The base URL for the FDC API.
+        timeout (float): Seconds to wait for a response before raising
+            FdcTimeoutError.
         session (requests.Session): A session object for making HTTP requests.
     """
-    
+
     def __init__(
-        self, 
-        api_key: Optional[str] = None, 
-        base_url: str = "https://api.nal.usda.gov/fdc/v1/"
+        self,
+        api_key: Optional[str] = None,
+        base_url: str = "https://api.nal.usda.gov/fdc/v1/",
+        timeout: float = DEFAULT_TIMEOUT
     ):
         """
         Initialize the FDC client.
-        
+
         Args:
             api_key: The API key for authenticating with the FDC API.
                 If not provided, will look for FDC_API_KEY environment variable.
             base_url: The base URL for the FDC API.
-        
+            timeout: Seconds to wait for a response before raising
+                FdcTimeoutError. Applies to both connect and read.
+
         Raises:
             ValueError: If no API key is provided or found in environment variables.
         """
         # Load environment variables from .env file
         load_dotenv()
-        
+
         self.api_key = api_key or os.environ.get("FDC_API_KEY")
         if not self.api_key:
             raise ValueError(
                 "No API key provided. Pass api_key parameter or set FDC_API_KEY environment variable."
             )
-        
+
         self.base_url = base_url
+        self.timeout = timeout
         self.session = requests.Session()
     
     def _make_request(
@@ -87,11 +103,12 @@ class FdcClient:
                 method=method,
                 url=url,
                 params=params,
-                json=data
+                json=data,
+                timeout=self.timeout
             )
-            
+
             response.raise_for_status()
-            
+
             return response.json()
         except requests.exceptions.HTTPError as e:
             if response.status_code == 401:
@@ -100,6 +117,12 @@ class FdcClient:
                 raise FdcRateLimitError("Rate limit exceeded.") from e
             else:
                 raise FdcApiError(f"API error: {response.status_code} - {response.text}") from e
+        except requests.exceptions.Timeout as e:
+            # Must precede RequestException: Timeout is a subclass of it, and a
+            # timeout is worth retrying where a 400 is not.
+            raise FdcTimeoutError(
+                f"Request to {url} timed out after {self.timeout}s"
+            ) from e
         except requests.exceptions.RequestException as e:
             raise FdcApiError(f"Request failed: {str(e)}") from e
     
