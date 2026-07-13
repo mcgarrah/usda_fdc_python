@@ -27,21 +27,43 @@ class Nutrient:
     def from_api_data(cls, data: Dict[str, Any]) -> 'Nutrient':
         """
         Create a Nutrient instance from API data.
-        
+
+        FDC describes a nutrient two different ways. ``format=full`` nests it
+        under a ``nutrient`` key, while ``format=abridged`` and the search
+        endpoint inline the fields on the row itself. Both are handled here:
+        reading only the nested shape silently dropped every nutrient of an
+        abridged food.
+
         Args:
             data: The API response data for a nutrient.
-            
+
         Returns:
             A Nutrient instance.
         """
-        nutrient_data = data.get('nutrient', {})
+        nutrient_data = data.get('nutrient')
+        if nutrient_data:
+            return cls(
+                id=nutrient_data.get('id'),
+                name=nutrient_data.get('name'),
+                amount=data.get('amount', 0),
+                unit_name=nutrient_data.get('unitName'),
+                nutrient_nbr=nutrient_data.get('number'),
+                rank=nutrient_data.get('rank')
+            )
+
+        # Inline shape. Abridged foods carry no nutrient id, only its number,
+        # and the search endpoint names the amount "value".
+        amount = data.get('amount')
+        if amount is None:
+            amount = data.get('value', 0)
+
         return cls(
-            id=nutrient_data.get('id'),
-            name=nutrient_data.get('name'),
-            amount=data.get('amount', 0),
-            unit_name=nutrient_data.get('unitName'),
-            nutrient_nbr=nutrient_data.get('number'),
-            rank=nutrient_data.get('rank')
+            id=data.get('nutrientId'),
+            name=data.get('nutrientName') or data.get('name'),
+            amount=amount,
+            unit_name=data.get('unitName'),
+            nutrient_nbr=data.get('nutrientNumber') or data.get('number'),
+            rank=data.get('rank')
         )
 
 
@@ -119,8 +141,10 @@ class Food:
         
         Args:
             data: The API response data for a food.
-            abridged: Whether the data is in abridged format.
-            
+            abridged: Whether the data is in abridged format. Nutrients are
+                parsed either way; this only skips food portions, which an
+                abridged response does not carry.
+
         Returns:
             A Food instance.
         """
@@ -141,14 +165,15 @@ class Food:
             household_serving_fulltext=data.get('householdServingFullText')
         )
         
-        # Parse nutrients if present
-        if 'foodNutrients' in data and not abridged:
+        # Parse nutrients if present. Nutrient.from_api_data understands both
+        # the nested (full) and inline (abridged) shapes, so an abridged food
+        # keeps its nutrients instead of coming back silently empty.
+        if 'foodNutrients' in data:
             food.nutrients = [
-                Nutrient.from_api_data(nutrient) 
-                for nutrient in data['foodNutrients'] 
-                if 'nutrient' in nutrient
+                Nutrient.from_api_data(nutrient)
+                for nutrient in data['foodNutrients']
             ]
-        
+
         # Parse food portions if present
         if 'foodPortions' in data and not abridged:
             food.food_portions = [

@@ -181,3 +181,58 @@ def test_timeout_is_distinguishable_from_other_failures():
             client._make_request("foods/search")
 
     assert not isinstance(exc.value, FdcTimeoutError)
+
+
+# ── API key handling ──────────────────────────────────────────────────
+# The key used to travel as a query parameter. requests puts the full URL into
+# its exception messages, so the first connection blip wrote the caller's key
+# into their tracebacks, log files and error tracker.
+
+SECRET = "SUPER_SECRET_KEY_12345"
+
+
+def test_api_key_is_sent_as_a_header():
+    client = FdcClient(api_key=SECRET)
+    assert client.session.headers["X-Api-Key"] == SECRET
+
+
+def test_api_key_is_not_put_in_the_query_string():
+    """The source of the leak: a key in the URL is a key in every log that URL
+    reaches."""
+    client = FdcClient(api_key=SECRET)
+
+    with patch.object(client.session, "request") as mock_request:
+        mock_request.return_value = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={}),
+            raise_for_status=MagicMock(),
+        )
+        client._make_request("foods/search")
+
+    assert "api_key" not in mock_request.call_args.kwargs["params"]
+
+
+def test_api_key_does_not_leak_into_a_network_error():
+    client = FdcClient(api_key=SECRET)
+
+    leaky = requests.exceptions.ConnectionError(
+        f"Max retries exceeded with url: /fdc/v1/food/1?api_key={SECRET}"
+    )
+    with patch.object(client.session, "request", side_effect=leaky):
+        with pytest.raises(FdcApiError) as exc:
+            client._make_request("food/1")
+
+    assert SECRET not in str(exc.value)
+
+
+def test_api_key_does_not_leak_into_an_http_error_body():
+    client = FdcClient(api_key=SECRET)
+
+    response = MagicMock(status_code=500, text=f"upstream rejected api_key={SECRET}")
+    response.raise_for_status.side_effect = requests.exceptions.HTTPError("500")
+
+    with patch.object(client.session, "request", return_value=response):
+        with pytest.raises(FdcApiError) as exc:
+            client._make_request("food/1")
+
+    assert SECRET not in str(exc.value)
