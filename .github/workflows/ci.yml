@@ -1,0 +1,61 @@
+name: CI
+
+# The repository had no CI at all: publish-to-pypi.yml was the only workflow,
+# so pull requests were merged with nothing verifying them.
+on:
+  push:
+    branches: [main]
+  pull_request:
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        # The boundaries of what pyproject.toml claims to support
+        # (requires-python = ">=3.8"), plus the version the release
+        # workflow builds with.
+        python-version: ["3.8", "3.11", "3.13"]
+
+    name: test (py${{ matrix.python-version }})
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: ${{ matrix.python-version }}
+          cache: pip
+
+      - name: Install package and test dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install -e .
+          pip install pytest pytest-cov
+
+      # Integration tests need a live FDC API key and django tests need Django;
+      # neither belongs in a pull-request gate.
+      - name: Run unit tests
+        run: pytest -m "not integration and not django" -v
+
+  build:
+    runs-on: ubuntu-latest
+    name: build (sdist + wheel)
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.13"
+
+      - name: Install build tooling
+        run: |
+          python -m pip install --upgrade pip
+          pip install build twine
+
+      # Catches a broken package before a tag turns it into a permanent
+      # PyPI release — a bad version can only be yanked, never replaced.
+      - name: Build and check the distribution
+        run: |
+          python -m build
+          python -m twine check dist/*

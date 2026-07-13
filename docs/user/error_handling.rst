@@ -11,8 +11,32 @@ The library defines the following exception hierarchy:
 - ``FdcApiError``: Base exception for all API errors
   - ``FdcAuthError``: Authentication failed (invalid API key)
   - ``FdcRateLimitError``: API rate limit exceeded
+  - ``FdcTimeoutError``: The API did not respond within the client timeout
   - ``FdcValidationError``: Invalid input parameters
   - ``FdcResourceNotFoundError``: Requested resource not found
+
+Request Timeouts
+--------------
+
+Every request is issued with a timeout, so a server that accepts a connection but
+never answers cannot block the caller indefinitely. The default is 30 seconds, and
+it applies to both connect and read:
+
+.. code-block:: python
+
+   from usda_fdc import FdcClient, FdcTimeoutError
+
+   # Use the 30 second default, or set your own
+   client = FdcClient(api_key="your_api_key_here", timeout=5.0)
+
+   try:
+       food = client.get_food(1750340)
+   except FdcTimeoutError as e:
+       print(f"FDC was too slow: {e}")
+
+``FdcTimeoutError`` subclasses ``FdcApiError``, so existing ``except FdcApiError``
+blocks keep catching timeouts. Catch it separately when you want to tell "slow"
+apart from "broken" — a timeout is usually worth retrying, a 400 is not.
 
 Basic Error Handling
 -----------------
