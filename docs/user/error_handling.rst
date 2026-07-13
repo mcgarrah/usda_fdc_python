@@ -16,7 +16,7 @@ The library defines the following exception hierarchy:
   - ``FdcResourceNotFoundError``: Requested resource not found
 
 Request Timeouts
---------------
+----------------
 
 Every request is issued with a timeout, so a server that accepts a connection but
 never answers cannot block the caller indefinitely. The default is 30 seconds, and

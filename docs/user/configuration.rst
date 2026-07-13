@@ -56,6 +56,17 @@ When initializing the client, you can override the default configuration:
        base_url="https://custom-api-url.example.com"
    )
 
+   # Custom request timeout, in seconds (default: 30)
+   client = FdcClient(
+       api_key="your_api_key_here",
+       timeout=5.0
+   )
+
+The ``timeout`` applies to both connecting and reading, and expires as
+``FdcTimeoutError``. Every request carries one: without a timeout, an FDC server
+that accepts a connection and then never answers would block the calling thread
+indefinitely. See :doc:`error_handling` for how to catch and retry it.
+
 Django Settings
 -------------
 

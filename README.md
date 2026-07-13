@@ -12,6 +12,8 @@ A comprehensive Python library for interacting with the USDA Food Data Central A
 - Comprehensive data models for all FDC data types
 - Efficient caching mechanisms for Django integration
 - Support for searching, filtering, and retrieving detailed nutritional information
+- Barcode (`gtin_upc`) exposed on branded foods, so a barcode lookup can be verified rather than trusted
+- Request timeouts on every call, raising `FdcTimeoutError` instead of hanging
 - Conversion utilities for different measurement units
 - Batch operations for efficient API usage
 - Command-line interface for quick data access

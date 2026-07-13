@@ -36,6 +36,41 @@ Search for foods using keywords:
    for food in results.foods:
        print(f"{food.description} (FDC ID: {food.fdc_id})")
 
+Looking Up a Food by Barcode
+----------------------------
+
+Branded foods carry a barcode, exposed as ``gtin_upc`` on both ``Food`` and
+``SearchResultFood``.
+
+FDC has no barcode-lookup endpoint, so a barcode lookup is really a full-text
+search — and that search is fuzzy. It will happily return an unrelated product
+for a barcode it has never seen:
+
+.. code-block:: python
+
+   # Searching for an unknown barcode still returns hundreds of thousands of "results"
+   results = client.search("00000000", data_type=["Branded"])
+   results.total_hits             # 455982
+   results.foods[0].description   # 'ALL NATURAL GLUTEN FREE CHICKEN NUGGETS'
+   results.foods[0].gtin_upc      # '0099447210127' — not the barcode we asked for
+
+Always confirm that a hit actually carries the barcode you searched for.
+Otherwise you will serve one product's nutrition under another product's
+barcode:
+
+.. code-block:: python
+
+   def find_by_barcode(client, barcode):
+       results = client.search(barcode, data_type=["Branded"], page_size=10)
+       for food in results.foods:
+           if food.gtin_upc and food.gtin_upc.lstrip("0") == barcode.lstrip("0"):
+               return client.get_food(food.fdc_id)
+       return None   # No match is a better answer than the wrong food
+
+Barcodes vary in length (UPC-A is 12 digits, EAN-13 is 13) and FDC zero-pads
+them inconsistently, so compare with the leading zeros stripped rather than
+comparing the raw strings.
+
 Getting Food Details
 -----------------
 

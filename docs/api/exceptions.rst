@@ -24,7 +24,7 @@ FdcRateLimitError
    :members:
 
 FdcTimeoutError
--------------
+---------------
 
 .. autoclass:: FdcTimeoutError
    :members:
