@@ -67,7 +67,19 @@ class FdcClient:
         self.base_url = base_url
         self.timeout = timeout
         self.session = requests.Session()
-    
+
+        # Send the key as a header, not a query parameter. requests puts the
+        # full URL in its exception messages, so a key in the query string ends
+        # up in tracebacks, log files and error trackers the first time the
+        # network hiccups. api.data.gov, which fronts FDC, accepts either.
+        self.session.headers.update({"X-Api-Key": self.api_key})
+
+    def _redact(self, text: str) -> str:
+        """Remove the API key from text on its way into an exception or a log."""
+        if self.api_key and self.api_key in text:
+            return text.replace(self.api_key, "***REDACTED***")
+        return text
+
     def _make_request(
         self, 
         endpoint: str, 
@@ -93,11 +105,9 @@ class FdcClient:
             FdcApiError: For other API errors.
         """
         url = urljoin(self.base_url, endpoint)
-        
-        # Always include the API key in the parameters
+
         params = params or {}
-        params["api_key"] = self.api_key
-        
+
         try:
             response = self.session.request(
                 method=method,
@@ -116,15 +126,17 @@ class FdcClient:
             elif response.status_code == 429:
                 raise FdcRateLimitError("Rate limit exceeded.") from e
             else:
-                raise FdcApiError(f"API error: {response.status_code} - {response.text}") from e
+                raise FdcApiError(
+                    f"API error: {response.status_code} - {self._redact(response.text)}"
+                ) from e
         except requests.exceptions.Timeout as e:
             # Must precede RequestException: Timeout is a subclass of it, and a
             # timeout is worth retrying where a 400 is not.
             raise FdcTimeoutError(
-                f"Request to {url} timed out after {self.timeout}s"
+                f"Request to {self._redact(url)} timed out after {self.timeout}s"
             ) from e
         except requests.exceptions.RequestException as e:
-            raise FdcApiError(f"Request failed: {str(e)}") from e
+            raise FdcApiError(f"Request failed: {self._redact(str(e))}") from e
     
     def search(
         self, 

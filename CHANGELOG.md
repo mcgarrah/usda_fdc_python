@@ -2,6 +2,44 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [Unreleased]
+
+### Security
+- The API key is now sent as an `X-Api-Key` header instead of an `api_key` query
+  parameter, and is redacted from error messages. `requests` embeds the full URL
+  in its exception text, so a key in the query string was written into the
+  caller's tracebacks, log files and error tracker the first time the network
+  hiccuped:
+
+  ```
+  FdcApiError: Request failed: ... Max retries exceeded with url:
+  /fdc/v1/food/1750340?format=full&api_key=YOUR_REAL_KEY
+  ```
+
+  No API change: `FdcClient(api_key=...)` and `FDC_API_KEY` work as before.
+
+### Fixed
+- **A food's kilojoules could be reported as its calories.** FDC lists energy
+  several times per food under the same name — `1008` (kcal), `1062` (the same
+  energy in kJ), and the Atwater variants `2047`/`2048` (kcal). All of them were
+  matched on the name alone and keyed as `calories`, so whichever came last in
+  the list won. Clarified butter (`fdc_id` 171314) lists 900 kcal and then
+  3766 kJ, and `analyze_food` reported **3766 calories** — which the CLI and the
+  HTML report then printed with a `kcal` suffix.
+
+  Energy is now matched on its nutrient id/number and unit: only kcal rows can
+  become `calories`, the plain `Energy` row is preferred over the Atwater
+  variants so the result never depends on list order, and the kJ figure is kept
+  under `energy_kj` rather than discarded.
+
+- **`format="abridged"` silently returned a food with no nutrients.** An
+  abridged response inlines each nutrient's fields on the row and carries no
+  nutrient id, while `format="full"` nests them under a `nutrient` key. Only the
+  nested shape was parsed, and the rest were dropped without a word: ghee came
+  back with 0 nutrients instead of 18. Both shapes are now understood, so
+  anyone reaching for abridged to save bandwidth no longer computes nutrition
+  from an empty list.
+
 ## [0.1.10] - 2026-07-13
 
 ### Added

@@ -46,16 +46,69 @@ class NutrientAnalysis:
         """
         return self.nutrients.get(nutrient_id.lower())
 
+# FDC reports a food's energy several times over, under the same name:
+#
+#   1008 / 208  Energy                             kcal
+#   1062 / 268  Energy                             kJ     (the same energy!)
+#   2047 / 957  Energy (Atwater General Factors)   kcal
+#   2048 / 958  Energy (Atwater Specific Factors)  kcal
+#
+# Matching those on the name alone made every one of them "calories", so
+# whichever came last in the list won. Clarified butter (fdc_id 171314) lists
+# 900 kcal and then 3766 kJ, and was reported as 3766 "calories" — a figure the
+# CLI and the HTML report then printed with a kcal suffix.
+#
+# Only the kcal rows are calories, and where a food carries more than one of
+# them we prefer the plain Energy row so the answer cannot depend on list order.
+_ENERGY_KCAL_PRECEDENCE = (
+    (1008, "208"),  # Energy
+    (2048, "958"),  # Energy (Atwater Specific Factors)
+    (2047, "957"),  # Energy (Atwater General Factors)
+)
+
+# Abridged responses spell the unit "KCAL"; full ones spell it "kcal".
+_KCAL_UNITS = {"kcal", "kilocalorie", "kilocalories"}
+
+
+def _is_energy(nutrient: Nutrient) -> bool:
+    """Whether a nutrient row describes a food's energy, in any unit."""
+    return "energy" in (nutrient.name or "").lower()
+
+
+def _is_kcal(nutrient: Nutrient) -> bool:
+    """Whether a nutrient row is measured in kilocalories rather than kilojoules."""
+    return (nutrient.unit_name or "").strip().lower() in _KCAL_UNITS
+
+
+def _energy_precedence(nutrient: Nutrient) -> int:
+    """Rank an energy row; lower wins.
+
+    An abridged food carries no nutrient id, only its number, so match on
+    either.
+    """
+    for rank, (nutrient_id, nutrient_nbr) in enumerate(_ENERGY_KCAL_PRECEDENCE):
+        if nutrient.id == nutrient_id or str(nutrient.nutrient_nbr or "") == nutrient_nbr:
+            return rank
+    return len(_ENERGY_KCAL_PRECEDENCE)
+
+
 def _get_nutrient_id(nutrient: Nutrient) -> str:
     """
     Get a standardized nutrient ID from a nutrient.
-    
+
     Args:
         nutrient: The nutrient object.
-        
+
     Returns:
         A standardized nutrient ID.
     """
+    if _is_energy(nutrient):
+        # A kJ row is not calories. Give it an id of its own so it cannot
+        # overwrite the kcal row it sits beside.
+        if _is_kcal(nutrient):
+            return "calories"
+        return f"energy_{(nutrient.unit_name or 'unknown').strip().lower()}"
+
     # Map common nutrient names to standardized IDs
     name_map = {
         "protein": "protein",
@@ -70,8 +123,7 @@ def _get_nutrient_id(nutrient: Nutrient) -> str:
         "vitamin c, total ascorbic acid": "vitamin_c",
         "vitamin a, iu": "vitamin_a",
         "cholesterol": "cholesterol",
-        "potassium, k": "potassium",
-        "energy": "calories"
+        "potassium, k": "potassium"
     }
     
     # Try to match by name
@@ -109,22 +161,26 @@ def analyze_food(
         serving_size=serving_size
     )
     
+    # Rank of the energy row currently holding "calories", so a lower-ranked
+    # one cannot displace it.
+    calories_rank: Optional[int] = None
+
     # Process nutrients
     for nutrient in food.nutrients:
         # Get standardized nutrient ID
         nutrient_id = _get_nutrient_id(nutrient)
-        
+
         # Calculate amount for the serving size
         amount = nutrient.amount * (serving_size / 100.0)
-        
+
         # Get DRI value if available
         dri_value = get_dri(nutrient_id, dri_type, gender, age)
-        
+
         # Calculate DRI percentage if DRI is available
         dri_percent = None
         if dri_value is not None and dri_value > 0:
             dri_percent = (amount / dri_value) * 100.0
-        
+
         # Create nutrient value
         nutrient_value = NutrientValue(
             nutrient=nutrient,
@@ -134,10 +190,17 @@ def analyze_food(
             dri_percent=dri_percent,
             dri_type=dri_type
         )
-        
+
+        if nutrient_id == "calories":
+            rank = _energy_precedence(nutrient)
+            if calories_rank is not None and rank >= calories_rank:
+                # Already holding a better energy row; keep it.
+                continue
+            calories_rank = rank
+
         # Add to nutrients dictionary
         analysis.nutrients[nutrient_id] = nutrient_value
-        
+
         # Track macronutrients
         if nutrient_id == "protein":
             analysis.protein_per_serving = amount

@@ -139,3 +139,70 @@ def test_search_result_food_without_gtin_upc_is_none():
     })
 
     assert result.gtin_upc is None
+
+
+# ── Abridged responses ────────────────────────────────────────────────
+# FDC describes a nutrient two ways. format=full nests it under a "nutrient"
+# key; format=abridged inlines the fields on the row and carries no nutrient id,
+# only its number. Parsing only the nested shape meant every nutrient of an
+# abridged food was silently dropped: a food with 35 nutrients came back with 0,
+# and no error to say so.
+
+ABRIDGED_NUTRIENT = {
+    "number": "208",
+    "name": "Energy",
+    "amount": 900.0,
+    "unitName": "KCAL",
+    "derivationCode": "LC",
+}
+
+FULL_NUTRIENT = {
+    "nutrient": {"id": 1008, "name": "Energy", "unitName": "kcal", "number": "208", "rank": 300},
+    "amount": 900.0,
+}
+
+
+def test_nutrient_parses_the_abridged_inline_shape():
+    nutrient = Nutrient.from_api_data(ABRIDGED_NUTRIENT)
+
+    assert nutrient.name == "Energy"
+    assert nutrient.amount == 900.0
+    assert nutrient.unit_name == "KCAL"
+    assert nutrient.nutrient_nbr == "208"
+
+
+def test_nutrient_still_parses_the_full_nested_shape():
+    nutrient = Nutrient.from_api_data(FULL_NUTRIENT)
+
+    assert nutrient.id == 1008
+    assert nutrient.name == "Energy"
+    assert nutrient.amount == 900.0
+    assert nutrient.unit_name == "kcal"
+
+
+def test_abridged_food_keeps_its_nutrients():
+    """The regression: a real abridged food (fdc_id 171314) has 18 nutrients and
+    was parsed into a Food with none, silently. Anyone computing nutrition from
+    it got zeros."""
+    food = Food.from_api_data({
+        "fdcId": 171314,
+        "description": "Butter, Clarified butter (ghee)",
+        "dataType": "SR Legacy",
+        "foodNutrients": [ABRIDGED_NUTRIENT],
+    })
+
+    assert len(food.nutrients) == 1
+    assert food.nutrients[0].amount == 900.0
+    assert food.nutrients[0].unit_name == "KCAL"
+
+
+def test_full_food_still_keeps_its_nutrients():
+    food = Food.from_api_data({
+        "fdcId": 171314,
+        "description": "Butter, Clarified butter (ghee)",
+        "dataType": "SR Legacy",
+        "foodNutrients": [FULL_NUTRIENT],
+    })
+
+    assert len(food.nutrients) == 1
+    assert food.nutrients[0].id == 1008
