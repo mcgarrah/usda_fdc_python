@@ -57,6 +57,7 @@ Contents
 
    user/installation
    user/quickstart
+   user/migration
    user/configuration
    user/django_integration
    user/cli

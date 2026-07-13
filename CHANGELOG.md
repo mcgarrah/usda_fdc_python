@@ -2,7 +2,34 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
-## [Unreleased]
+## [0.2.0] - 2026-07-13
+
+The minor version is bumped because behaviour changes: code that caught every
+failure as one exception, or that formatted `dri_percent` without a `None` check,
+may need a small edit. See [the migration guide](docs/user/migration.rst).
+
+Every one of these is the same defect wearing a different hat. The old code did
+not fail — it *answered*, with a plausible number that was wrong or an exception
+that said nothing. A food's kilojoules were served as its calories, an upper
+limit was 1000x out, a missing food was indistinguishable from a broken API. For
+nutrition data, quietly wrong is worse than loudly absent, so 0.2.0 prefers
+`None` and a specific error over a confident fabrication.
+
+### Breaking changes
+- **HTTP 404, 403 and 400 now raise `FdcResourceNotFoundError`, `FdcAuthError`
+  and `FdcValidationError`** instead of a bare `FdcApiError`. All still derive
+  from `FdcApiError`, so a broad `except FdcApiError` is unaffected; only code
+  branching on the exception's exact type sees a difference.
+- **`dri_percent` is now `None` when the food's unit cannot be compared to the
+  DRI's** (vitamin A in IU against a µg allowance), where it previously produced
+  a wrong number. Guard for `None` before formatting it.
+- **`get_dri(..., DriType.UL)` returns a value where it used to return `None`** —
+  expressed in grams, since that is the unit `ul.json` uses. Direct callers who
+  assumed milligrams must check the unit; `get_dri_value` now returns it
+  alongside the number. `analyze_food` handles the conversion itself.
+- **`calories_per_serving` may differ from what an earlier version reported** for
+  foods listing energy in both kcal and kJ — because it was previously wrong. See
+  0.1.11. Stored calorie figures for affected foods are worth recomputing.
 
 ### Added
 - `status_code` on `FdcApiError` and every exception deriving from it, holding
