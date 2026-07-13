@@ -27,10 +27,20 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install build twine
+          pip install build twine pytest
+          pip install -e .
+
+      # A release to PyPI cannot be undone — a bad version can only be yanked,
+      # and the version number is burned forever. So the tag must not be able
+      # to ship code that does not pass its own tests.
+      - name: Run tests
+        run: pytest -m "not integration and not django" -v
 
       - name: Build package
         run: python -m build
+
+      - name: Check the distribution
+        run: python -m twine check dist/*
 
       - name: Create GitHub Release
         uses: softprops/action-gh-release@v1
