@@ -14,6 +14,14 @@ class FdcRateLimitError(FdcApiError):
     """Exception raised when the API rate limit is exceeded."""
     pass
 
+class FdcTimeoutError(FdcApiError):
+    """Exception raised when a request to the FDC API times out.
+
+    Distinct from a generic FdcApiError so callers can tell "slow" from
+    "broken" — a timeout is usually worth retrying, a 400 is not.
+    """
+    pass
+
 class FdcValidationError(FdcApiError):
     """Exception raised when input validation fails."""
     pass

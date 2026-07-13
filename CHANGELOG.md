@@ -2,6 +2,39 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [0.1.10] - 2026-07-13
+
+### Added
+- `gtin_upc` on `Food` and `SearchResultFood`, parsed from the API's `gtinUpc`
+  field. Branded foods carry a barcode and the API has always returned it, but
+  both models dropped it.
+
+  This matters because FDC exposes no barcode-lookup endpoint: looking a
+  product up by barcode means using the full-text search, which returns fuzzy
+  matches — an unknown barcode happily comes back with an unrelated product.
+  Without `gtin_upc` a caller has no way to verify a hit is the barcode it
+  asked for, and ends up attributing one product's nutrition to another
+  product's barcode. Consumers previously had to read the raw search payload
+  to work around this.
+
+- `timeout` on `FdcClient` (default 30s, `usda_fdc.client.DEFAULT_TIMEOUT`),
+  applied to every request.
+
+- `FdcTimeoutError`, raised when a request exceeds the timeout. It subclasses
+  `FdcApiError`, so existing `except FdcApiError` handlers keep working, but
+  callers can now tell "slow" from "broken" — a timeout is usually worth
+  retrying, a 400 is not.
+
+### Fixed
+- **Requests could block forever.** `requests` has no default timeout and none
+  was passed, so a server that accepted the connection and then never answered
+  hung the calling thread indefinitely — not for a while, forever.
+
+  This punished async consumers hardest: they run this synchronous client in a
+  thread pool, and their own `asyncio.wait_for` frees the caller but cannot
+  cancel the blocking call underneath, so the thread was lost for the life of
+  the process. Enough stalled calls and the pool was dead.
+
 ## [0.1.9] - 2025-06-06
 
 ### Added

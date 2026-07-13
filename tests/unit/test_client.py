@@ -5,7 +5,10 @@ Unit tests for the FdcClient class.
 import pytest
 from unittest.mock import patch, MagicMock
 
-from usda_fdc import FdcClient, FdcApiError
+import requests
+
+from usda_fdc import FdcClient, FdcApiError, FdcTimeoutError
+from usda_fdc.client import DEFAULT_TIMEOUT
 from usda_fdc.models import Nutrient
 
 def test_client_initialization():
@@ -112,3 +115,69 @@ def test_api_error_handling(mock_client):
         with pytest.raises(FdcApiError) as excinfo:
             mock_client.search("apple")
         assert "API Error" in str(excinfo.value)
+
+# ── Request timeouts ──────────────────────────────────────────────────
+# requests has NO default timeout. Without one, a server that accepts the
+# connection and never answers blocks the calling thread forever. Async
+# consumers run this synchronous client in a thread pool, and their own
+# asyncio.wait_for cannot cancel the blocking call underneath — so an
+# unbounded request leaks a thread for the life of the process.
+
+def test_client_has_a_default_timeout():
+    client = FdcClient(api_key="test_key")
+    assert client.timeout == DEFAULT_TIMEOUT
+    assert client.timeout > 0
+
+
+def test_client_timeout_is_configurable():
+    client = FdcClient(api_key="test_key", timeout=5.0)
+    assert client.timeout == 5.0
+
+
+def test_timeout_is_actually_passed_to_the_request():
+    """The easy regression: accept a timeout parameter, then forget to use it.
+
+    A client that stores the value but never hands it to requests still blocks
+    forever, while looking correct.
+    """
+    client = FdcClient(api_key="test_key", timeout=7.5)
+
+    with patch.object(client.session, "request") as mock_request:
+        mock_request.return_value = MagicMock(
+            status_code=200,
+            json=MagicMock(return_value={"foods": []}),
+            raise_for_status=MagicMock(),
+        )
+        client._make_request("foods/search")
+
+    assert mock_request.call_args.kwargs["timeout"] == 7.5
+
+
+def test_timeout_raises_fdc_timeout_error():
+    client = FdcClient(api_key="test_key", timeout=0.1)
+
+    with patch.object(client.session, "request",
+                      side_effect=requests.exceptions.Timeout("timed out")):
+        with pytest.raises(FdcTimeoutError) as exc:
+            client._make_request("foods/search")
+
+    assert "timed out" in str(exc.value).lower()
+    assert "0.1" in str(exc.value)
+
+
+def test_timeout_error_is_an_api_error():
+    """Callers catching FdcApiError must keep catching timeouts."""
+    assert issubclass(FdcTimeoutError, FdcApiError)
+
+
+def test_timeout_is_distinguishable_from_other_failures():
+    """A timeout is usually worth retrying; a 400 is not. Callers need to tell
+    them apart, so a timeout must not surface as a bare FdcApiError."""
+    client = FdcClient(api_key="test_key")
+
+    with patch.object(client.session, "request",
+                      side_effect=requests.exceptions.ConnectionError("refused")):
+        with pytest.raises(FdcApiError) as exc:
+            client._make_request("foods/search")
+
+    assert not isinstance(exc.value, FdcTimeoutError)
