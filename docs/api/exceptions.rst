@@ -23,6 +23,12 @@ FdcRateLimitError
 .. autoclass:: FdcRateLimitError
    :members:
 
+FdcTimeoutError
+-------------
+
+.. autoclass:: FdcTimeoutError
+   :members:
+
 FdcValidationError
 ----------------
 
