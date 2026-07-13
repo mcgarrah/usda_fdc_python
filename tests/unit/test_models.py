@@ -5,7 +5,7 @@ Unit tests for the models module.
 import pytest
 from datetime import date
 
-from usda_fdc.models import Food, Nutrient, FoodPortion, SearchResult
+from usda_fdc.models import Food, Nutrient, FoodPortion, SearchResult, SearchResultFood
 
 def test_food_model():
     """Test the Food model."""
@@ -86,3 +86,56 @@ def test_search_result_model():
     assert len(result.foods) == 2
     assert result.foods[0].fdc_id == 1234
     assert result.foods[1].fdc_id == 5678
+
+def test_food_parses_gtin_upc():
+    """Branded foods carry a barcode; from_api_data must not drop it.
+
+    FDC has no barcode-lookup endpoint, so callers looking a product up by
+    barcode go through the full-text search — which returns fuzzy matches.
+    Without gtin_upc there is no way to verify a hit really is the barcode
+    that was asked for, and an unknown barcode silently returns an unrelated
+    product's nutrition.
+    """
+    food = Food.from_api_data({
+        "fdcId": 2117779,
+        "description": "SPICY SWEET CHILI FLAVORED TORTILLA CHIPS",
+        "dataType": "Branded",
+        "brandOwner": "Frito-Lay",
+        "gtinUpc": "028400642255",
+    })
+
+    assert food.gtin_upc == "028400642255"
+
+
+def test_food_without_gtin_upc_is_none():
+    """Foundation and Survey foods have no barcode."""
+    food = Food.from_api_data({
+        "fdcId": 1234,
+        "description": "Broccoli, raw",
+        "dataType": "Foundation",
+    })
+
+    assert food.gtin_upc is None
+
+
+def test_search_result_food_parses_gtin_upc():
+    """The search result is where the barcode check actually happens, so this
+    model needs the field just as much as Food does."""
+    result = SearchResultFood.from_api_data({
+        "fdcId": 2117779,
+        "description": "SPICY SWEET CHILI FLAVORED TORTILLA CHIPS",
+        "dataType": "Branded",
+        "gtinUpc": "028400642255",
+    })
+
+    assert result.gtin_upc == "028400642255"
+
+
+def test_search_result_food_without_gtin_upc_is_none():
+    result = SearchResultFood.from_api_data({
+        "fdcId": 1234,
+        "description": "Broccoli, raw",
+        "dataType": "Foundation",
+    })
+
+    assert result.gtin_upc is None

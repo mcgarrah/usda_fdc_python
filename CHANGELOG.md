@@ -2,6 +2,21 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [0.1.10] - 2026-07-13
+
+### Added
+- `gtin_upc` on `Food` and `SearchResultFood`, parsed from the API's `gtinUpc`
+  field. Branded foods carry a barcode and the API has always returned it, but
+  both models dropped it.
+
+  This matters because FDC exposes no barcode-lookup endpoint: looking a
+  product up by barcode means using the full-text search, which returns fuzzy
+  matches — an unknown barcode happily comes back with an unrelated product.
+  Without `gtin_upc` a caller has no way to verify a hit is the barcode it
+  asked for, and ends up attributing one product's nutrition to another
+  product's barcode. Consumers previously had to read the raw search payload
+  to work around this.
+
 ## [0.1.9] - 2025-06-06
 
 ### Added

@@ -87,6 +87,13 @@ class FoodPortion:
 class Food:
     """
     Represents a food item from the FDC database.
+
+    Note on ``gtin_upc``: FDC has no barcode-lookup endpoint, so callers
+    looking a product up by barcode must use the full-text search, which
+    returns fuzzy matches — an unknown barcode happily comes back with an
+    unrelated product. ``gtin_upc`` is what lets a caller verify that a hit
+    really is the barcode they asked for, rather than attributing one
+    product's nutrition to another product's barcode.
     """
     fdc_id: int
     description: str
@@ -97,6 +104,7 @@ class Food:
     scientific_name: Optional[str] = None
     brand_owner: Optional[str] = None
     brand_name: Optional[str] = None
+    gtin_upc: Optional[str] = None
     ingredients: Optional[str] = None
     serving_size: Optional[float] = None
     serving_size_unit: Optional[str] = None
@@ -126,6 +134,7 @@ class Food:
             scientific_name=data.get('scientificName'),
             brand_owner=data.get('brandOwner'),
             brand_name=data.get('brandName'),
+            gtin_upc=data.get('gtinUpc'),
             ingredients=data.get('ingredients'),
             serving_size=data.get('servingSize'),
             serving_size_unit=data.get('servingSizeUnit'),
@@ -162,7 +171,8 @@ class SearchResultFood:
     food_category: Optional[str] = None
     brand_owner: Optional[str] = None
     brand_name: Optional[str] = None
-    
+    gtin_upc: Optional[str] = None
+
     @classmethod
     def from_api_data(cls, data: Dict[str, Any]) -> 'SearchResultFood':
         """
@@ -181,7 +191,8 @@ class SearchResultFood:
             publication_date=data.get('publicationDate'),
             food_category=data.get('foodCategory'),
             brand_owner=data.get('brandOwner'),
-            brand_name=data.get('brandName')
+            brand_name=data.get('brandName'),
+            gtin_upc=data.get('gtinUpc')
         )
 
 
