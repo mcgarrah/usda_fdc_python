@@ -2,7 +2,7 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
-## [Unreleased]
+## [0.1.11] - 2026-07-13
 
 ### Security
 - The API key is now sent as an `X-Api-Key` header instead of an `api_key` query
