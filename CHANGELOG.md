@@ -2,6 +2,42 @@
 
 All notable changes to the USDA FDC Python Client will be documented in this file.
 
+## [Unreleased]
+
+### Added
+- `status_code` on `FdcApiError` and every exception deriving from it, holding
+  the HTTP status the API replied with (`None` when the request never reached
+  the API, as with a refused connection or a timeout). The documentation has
+  told callers to branch on this attribute for some time, including a
+  retry-on-5xx example that could never have run: nothing ever set it, so
+  `hasattr(e, 'status_code')` was always `False`.
+- `get_dri_value`, which returns a DRI together with its unit.
+- `FdcValidationError` and `FdcResourceNotFoundError` are now exported from the
+  package root, alongside the exceptions that were already there.
+
+### Fixed
+- **An invalid API key raised a nondescript `FdcApiError`.** FDC sits behind
+  api.data.gov, which rejects a bad key with HTTP **403**, while only 401 was
+  being mapped — so the single most common mistake a caller can make missed
+  `FdcAuthError` entirely. Both statuses now raise it.
+- **A missing food and a rejected request were indistinguishable from a broken
+  API.** HTTP 404 now raises `FdcResourceNotFoundError` and HTTP 400 raises
+  `FdcValidationError`. Both classes had been defined, documented, and never
+  raised by anything.
+- **Only `DriType.RDA` ever returned data.** `ul.json` ships real Tolerable
+  Upper Intake Levels, but under a different schema than `get_dri` knew how to
+  read, so every UL lookup came back `None`. Both schemas are now understood.
+  `DriType.AI`, `EAR` and `AMDR` ship no data at all; they still return `None`,
+  but now log a warning saying so once, rather than leaving an empty DRI column
+  unexplained.
+- **DRI percentages ignored units.** The shipped data does not use one scale
+  throughout: iron's RDA is `8` mg, its UL is `0.045` **g**. `analyze_food`
+  divided a food's amount by the DRI as a bare number, so a serving of spinach
+  measured against iron's upper limit would have reported **2802%** of it
+  instead of 2.8%. Amounts are now converted into the DRI's unit first, and a
+  pair that cannot be compared at all — vitamin A in IU against a µg allowance —
+  yields no percentage rather than a confident wrong one.
+
 ## [0.1.11] - 2026-07-13
 
 ### Security

@@ -6,7 +6,43 @@ from dataclasses import dataclass, field
 from typing import Dict, List, Optional, Any, Union, Tuple
 
 from ..models import Food, Nutrient
-from .dri import DriType, Gender, get_dri
+from ..utils import convert_measurement
+from .dri import DriType, DriValue, Gender, get_dri, get_dri_value
+
+# FDC writes its units in caps ("MG"), and micrograms as "UG". Anything not
+# listed here — IU above all — has no mass dimension we can convert.
+_FDC_UNIT_ALIASES = {
+    "g": "g",
+    "mg": "mg",
+    "ug": "µg",
+    "µg": "µg",
+    "mcg": "µg",
+}
+
+
+def _dri_percent(amount: float, unit: Optional[str], dri: Optional[DriValue]) -> Optional[float]:
+    """What percentage of a DRI an amount represents, or None if they cannot be compared.
+
+    The DRI files disagree about units: an RDA for iron is 8 mg, its UL is
+    0.045 — grams. Dividing a food's milligrams by the latter would report 1000x
+    the truth, so the amount is converted into the DRI's own unit first, and a
+    pair that cannot be converted (vitamin A in IU against a µg allowance)
+    yields nothing rather than a confident wrong number.
+    """
+    if dri is None or not dri.value:
+        return None
+
+    food_unit = _FDC_UNIT_ALIASES.get((unit or "").strip().lower())
+    dri_unit = _FDC_UNIT_ALIASES.get((dri.unit or "").strip().lower())
+    if not food_unit or not dri_unit:
+        return None
+
+    try:
+        comparable = convert_measurement(amount, food_unit, dri_unit)
+    except ValueError:
+        return None
+
+    return (comparable / dri.value) * 100.0
 
 @dataclass
 class NutrientValue:
@@ -19,6 +55,9 @@ class NutrientValue:
     dri: Optional[float] = None
     dri_percent: Optional[float] = None
     dri_type: Optional[DriType] = None
+    # The unit ``dri`` is expressed in, which is not always the food's own:
+    # an RDA for iron is 8 mg, its UL is 0.045 g.
+    dri_unit: Optional[str] = None
 
 @dataclass
 class NutrientAnalysis:
@@ -173,22 +212,18 @@ def analyze_food(
         # Calculate amount for the serving size
         amount = nutrient.amount * (serving_size / 100.0)
 
-        # Get DRI value if available
-        dri_value = get_dri(nutrient_id, dri_type, gender, age)
-
-        # Calculate DRI percentage if DRI is available
-        dri_percent = None
-        if dri_value is not None and dri_value > 0:
-            dri_percent = (amount / dri_value) * 100.0
+        # Get DRI value if available, and the unit it is expressed in
+        dri = get_dri_value(nutrient_id, dri_type, gender, age)
 
         # Create nutrient value
         nutrient_value = NutrientValue(
             nutrient=nutrient,
             amount=amount,
             unit=nutrient.unit_name,
-            dri=dri_value,
-            dri_percent=dri_percent,
-            dri_type=dri_type
+            dri=dri.value if dri else None,
+            dri_percent=_dri_percent(amount, nutrient.unit_name, dri),
+            dri_type=dri_type,
+            dri_unit=dri.unit if dri else None
         )
 
         if nutrient_id == "calories":

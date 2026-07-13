@@ -9,7 +9,14 @@ from typing import Dict, List, Optional, Union, Any
 from urllib.parse import urljoin
 from dotenv import load_dotenv
 
-from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError, FdcTimeoutError
+from .exceptions import (
+    FdcApiError,
+    FdcRateLimitError,
+    FdcAuthError,
+    FdcTimeoutError,
+    FdcValidationError,
+    FdcResourceNotFoundError,
+)
 from .models import Food, SearchResult, Nutrient
 
 logger = logging.getLogger(__name__)
@@ -121,14 +128,28 @@ class FdcClient:
 
             return response.json()
         except requests.exceptions.HTTPError as e:
-            if response.status_code == 401:
-                raise FdcAuthError("Authentication failed. Check your API key.") from e
-            elif response.status_code == 429:
-                raise FdcRateLimitError("Rate limit exceeded.") from e
-            else:
-                raise FdcApiError(
-                    f"API error: {response.status_code} - {self._redact(response.text)}"
+            status = response.status_code
+            body = self._redact(response.text)
+
+            # api.data.gov, which fronts FDC, answers an invalid key with 403,
+            # not 401 — so the common case of a wrong key used to arrive as a
+            # nondescript FdcApiError.
+            if status in (401, 403):
+                raise FdcAuthError(
+                    "Authentication failed. Check your API key.", status_code=status
                 ) from e
+            if status == 404:
+                raise FdcResourceNotFoundError(
+                    f"Not found: {endpoint}", status_code=status
+                ) from e
+            if status == 429:
+                raise FdcRateLimitError("Rate limit exceeded.", status_code=status) from e
+            if status == 400:
+                raise FdcValidationError(
+                    f"The API rejected the request: {body}", status_code=status
+                ) from e
+
+            raise FdcApiError(f"API error: {status} - {body}", status_code=status) from e
         except requests.exceptions.Timeout as e:
             # Must precede RequestException: Timeout is a subclass of it, and a
             # timeout is worth retrying where a 400 is not.

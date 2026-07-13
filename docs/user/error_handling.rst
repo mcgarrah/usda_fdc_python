@@ -8,12 +8,20 @@ Exception Hierarchy
 
 The library defines the following exception hierarchy:
 
-- ``FdcApiError``: Base exception for all API errors
-  - ``FdcAuthError``: Authentication failed (invalid API key)
-  - ``FdcRateLimitError``: API rate limit exceeded
+- ``FdcApiError``: Base exception for all API errors (HTTP 5xx and anything unmapped)
+  - ``FdcAuthError``: Authentication failed — HTTP 401 or 403. FDC sits behind
+    api.data.gov, which rejects an invalid key with **403**, so both are treated
+    as an auth failure.
+  - ``FdcRateLimitError``: API rate limit exceeded — HTTP 429
   - ``FdcTimeoutError``: The API did not respond within the client timeout
-  - ``FdcValidationError``: Invalid input parameters
-  - ``FdcResourceNotFoundError``: Requested resource not found
+  - ``FdcValidationError``: The API rejected the request — HTTP 400, typically a
+    parameter outside the range FDC accepts (``page_size`` above 200, say)
+  - ``FdcResourceNotFoundError``: Requested resource not found — HTTP 404. A food
+    that does not exist is an ordinary outcome of a lookup, not a breakdown, so
+    it is worth catching on its own.
+
+Every one of these is an ``FdcApiError``, so a broad ``except FdcApiError`` still
+catches the lot.
 
 Request Timeouts
 ----------------
@@ -63,28 +71,27 @@ Here's how to handle errors when using the client:
 Handling Specific HTTP Status Codes
 --------------------------------
 
-The ``FdcApiError`` exception includes the HTTP status code, which you can use for more specific error handling:
+Every ``FdcApiError`` carries the HTTP status the API replied with, as
+``status_code``. It is ``None`` for failures that never reached the API — a
+refused connection, a timeout — which is itself worth knowing:
 
 .. code-block:: python
 
-   from usda_fdc import FdcClient, FdcApiError
-   
+   from usda_fdc import FdcClient, FdcApiError, FdcResourceNotFoundError
+
    client = FdcClient(api_key="your_api_key_here")
-   
+
    try:
        food = client.get_food(1750340)
+   except FdcResourceNotFoundError:
+       print("No such food")            # usually clearer than reading the status
    except FdcApiError as e:
-       if hasattr(e, 'status_code'):
-           if e.status_code == 404:
-               print("Food not found")
-           elif e.status_code == 429:
-               print("Too many requests. Try again later.")
-           elif e.status_code >= 500:
-               print("Server error. Try again later.")
-           else:
-               print(f"API error: {e}")
+       if e.status_code is None:
+           print(f"Never reached the API: {e}")
+       elif e.status_code >= 500:
+           print("Server error. Try again later.")
        else:
-           print(f"API error without status code: {e}")
+           print(f"API error {e.status_code}: {e}")
 
 Retry Logic
 ---------
@@ -94,25 +101,26 @@ For transient errors like rate limiting or server errors, you can implement retr
 .. code-block:: python
 
    import time
-   from usda_fdc import FdcClient, FdcApiError, FdcRateLimitError
-   
+   from usda_fdc import FdcClient, FdcApiError, FdcRateLimitError, FdcTimeoutError
+
    client = FdcClient(api_key="your_api_key_here")
-   
+
    def get_food_with_retry(fdc_id, max_retries=3, retry_delay=5):
        retries = 0
        while retries < max_retries:
            try:
                return client.get_food(fdc_id)
-           except FdcRateLimitError:
+           except (FdcRateLimitError, FdcTimeoutError):
+               # Both are "try again", not "you asked for the wrong thing"
                retries += 1
                if retries < max_retries:
-                   print(f"Rate limit exceeded. Retrying in {retry_delay} seconds...")
+                   print(f"Throttled or timed out. Retrying in {retry_delay} seconds...")
                    time.sleep(retry_delay)
                    retry_delay *= 2  # Exponential backoff
                else:
                    raise
            except FdcApiError as e:
-               if hasattr(e, 'status_code') and e.status_code >= 500:
+               if e.status_code is not None and e.status_code >= 500:
                    retries += 1
                    if retries < max_retries:
                        print(f"Server error. Retrying in {retry_delay} seconds...")
@@ -121,6 +129,7 @@ For transient errors like rate limiting or server errors, you can implement retr
                    else:
                        raise
                else:
+                   # A 400 or a 404 will not fix itself
                    raise
    
    # Use the retry function

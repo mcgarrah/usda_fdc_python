@@ -8,7 +8,14 @@ designed for easy integration with Django applications and local database cachin
 __version__ = "0.1.11"
 
 from .client import FdcClient
-from .exceptions import FdcApiError, FdcRateLimitError, FdcAuthError, FdcTimeoutError
+from .exceptions import (
+    FdcApiError,
+    FdcRateLimitError,
+    FdcAuthError,
+    FdcTimeoutError,
+    FdcValidationError,
+    FdcResourceNotFoundError,
+)
 
 __all__ = [
     "FdcClient",
@@ -16,4 +23,6 @@ __all__ = [
     "FdcRateLimitError",
     "FdcAuthError",
     "FdcTimeoutError",
+    "FdcValidationError",
+    "FdcResourceNotFoundError",
 ]

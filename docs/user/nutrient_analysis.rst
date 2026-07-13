@@ -175,29 +175,46 @@ The HTML report includes:
 Dietary Reference Intakes (DRIs)
 -----------------------------
 
-The library includes data for various types of Dietary Reference Intakes:
+The library ships Dietary Reference Intake data drawn from the Institute of
+Medicine's *Dietary Reference Intakes: The Essential Guide to Nutrient
+Requirements* (2006).
 
 .. code-block:: python
 
-   from usda_fdc.analysis.dri import get_dri, DriType, Gender
+   from usda_fdc.analysis.dri import get_dri_value, DriType, Gender
 
    # Get the RDA for protein for a 30-year-old male
-   protein_rda = get_dri(
+   protein_rda = get_dri_value(
        nutrient_id="protein",
        dri_type=DriType.RDA,
        gender=Gender.MALE,
        age=30
    )
-   
-   print(f"Protein RDA: {protein_rda}g")
+
+   print(f"Protein RDA: {protein_rda.value}{protein_rda.unit}")   # 56g
+
+Mind the unit. ``get_dri_value`` returns it alongside the number because the
+underlying data does not use one scale throughout: iron's RDA is ``8`` **mg**
+while its UL is ``0.045`` **g**. Comparing a food's milligrams against the
+latter would overstate it a thousandfold. ``analyze_food`` converts the food's
+amount into the DRI's unit before working out ``dri_percent``, and reports no
+percentage at all where the two cannot be compared — vitamin A in IU against a
+µg allowance, for instance.
+
+``get_dri`` still returns the bare number, in whatever unit that DRI type's data
+uses.
 
 Available DRI types:
 
-- ``DriType.RDA``: Recommended Dietary Allowance
-- ``DriType.AI``: Adequate Intake
-- ``DriType.UL``: Tolerable Upper Intake Level
-- ``DriType.EAR``: Estimated Average Requirement
-- ``DriType.AMDR``: Acceptable Macronutrient Distribution Range
+- ``DriType.RDA``: Recommended Dietary Allowance — **data included**
+- ``DriType.UL``: Tolerable Upper Intake Level — **data included**
+- ``DriType.AI``: Adequate Intake — no data; lookups return ``None``
+- ``DriType.EAR``: Estimated Average Requirement — no data; lookups return ``None``
+- ``DriType.AMDR``: Acceptable Macronutrient Distribution Range — no data; lookups return ``None``
+
+Asking for a type with no data behind it logs a warning once and returns
+``None``, so an empty DRI column has a stated reason rather than being a
+mystery.
 
 Command-Line Interface
 -------------------
